@@ -1,3 +1,5 @@
+Knows issures, if you add another jack methodOne2 calls (like 5 to 20) to the present in the main() the plugin probably may stop working. The same if you try to enhance the packages/danno_script/lib/lint_rules/danno_script_lints.dart just by increasing the file by several lines may cause this to stop working. Because of this the original code was leaned much but the functionality for now works as expected.
+
 Specification: none normal available but an intuitive example serves as a specification:
 ```dart
 class User {
@@ -52,20 +54,19 @@ class User {
       null;
 }
 ```
+Here is the example lint undersores with red meaning errors, especially under an argument to a function or if an argument was not found then under a method name.
 
+![image]([https://github.com/brilliapps/anno_types/blob/main/readmeasset/screenshotpart.png](https://github.com/brilliapps/danno_script/blob/main/assets/danno_script_1.jpg))
 
-The Union Types based mostly on custom_lint. First, the required version of Dart IS NOT 3.5 OR 3.6 BUT 3.4 (like 3.4.4). Maybe the following package itself is not significant, but for me the recently discovered rule behind it for me is a game changer. We can put an annotation before a param declaration like this:
+First, should work on dart 3.5, 3.6 on windows. Maybe the following package itself is not significant, but for me the recently discovered rule behind it for me is a game changer. We can put an annotation before a param declaration like this:
 ```dart
 // a method declaration of a class:
 void methodOne2(@$(int, Map<List<int?>, int>, List<Map<int, int>>) abcd) => null;
 ```
 And that's it. abcd is dynamic when not preceded, but for now you can place there any type with the Object? most recommended for now, BUT the annotation causes an error to be shown error in the place the method is called.
 With the incoming macros, f.e. applied to a library/entire dart file, you can generate what's missing. Also possibly find a creative way for the macro to load errors produced by the custom_lint package, and the macro throw an Exception if any is found. An exception thrown by the macro as i understand is not only lint error but also an error during compilation time.
-This (and like this) is a temporary solution that cannot replace the incoming Union Types implementation.
-Tested on a couple of strange type inheritation rules, but not everything was tested.
-
-Warning! Still don't know why my development version (not this repo package) stops after several or more minutes.
-But this package is a place to start from or to get inspired.
+This (and like this) is rather a temporary solution that cannot replace Dart features like the incoming Union Types implementation or possible conditions if/else inside method param list or constructor param list.
+[Edit: retest again]: Tested on a couple of strange type inheritation rules, but not everything was tested.
 
 Also The annotations accept not only types but literals, const objects, etc. However currently i was not able to read evaluated method invokation params so couldn't handle it correctly (did recently an issue/feature request about it for the custom_lint package exactly for this reason). I won't go even deeper into analyzer/custom_lint related stuff.
 
