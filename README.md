@@ -1,6 +1,10 @@
 Danno Script (Dart Annotation Script) - an independent meta programming language implemented via dart annotations, lints (custom_lint) and macros. Very early development. Initially created to improve working with types adding such a feature like for example, allowing to call a method with an argument that can be of int or String.
 
-TODO: some explanation how it works, but it can be understood from analisis the following code and image with lint results. 
+TODO: 
+1. Some explanation how it works, but it can be understood from analisis the following code and image with lint results. 
+2. Add annotation requiring not overriding or overriding the method param $() annotation with the same == $() object.
+3. Implement constructor.
+4. Try to implement the return value like method/constructor params.
 
 Known issues:
 1. In the @$(...) Types are handled/implemented but values like 0.25, 'normal non param name string', non-syntax object Object() are ignored 
