@@ -1,4 +1,4 @@
-Knows issures, if you add another jack methodOne2 calls (like 5 to 20) to the present in the main() the plugin probably may stop working. The same if you try to enhance the packages/danno_script/lib/lint_rules/danno_script_lints.dart just by increasing the file by several lines may cause this to stop working. Because of this the original code was leaned much but the functionality for now works as expected.
+Known issures, if you add another jack methodOne2 calls (like 5 to 20) to the present in the main() the plugin probably may stop working. The same if you try to enhance the packages/danno_script/lib/lint_rules/danno_script_lints.dart just by increasing the file by several lines may cause this to stop working. Because of this the original code was leaned much but the functionality for now works as expected.
 
 Specification: none normal available but an intuitive example serves as a specification:
 ```dart
