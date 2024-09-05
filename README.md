@@ -1,4 +1,8 @@
-Known issures, if you add another jack methodOne2 calls (like 5 to 20) to the present in the main() the plugin probably may stop working. The same if you try to enhance the packages/danno_script/lib/lint_rules/danno_script_lints.dart just by increasing the file by several lines may cause this to stop working. Because of this the original code was leaned much but the functionality for now works as expected.
+Danno Script (Dart Annotation Script) - an independent meta programming language implemented via dart annotations, lints (custom_lint) and macros. Very early development. Initially created to improve working with types adding such a feature like for example, allowing to call a method with an argument that can be of int or String.
+
+TODO: some explanation how it works, but it can be understood from analisis the following code and image with lint results. 
+
+Known issues, if you add another jack methodOne2 calls (like 5 to 20) to the present in the main() the plugin probably may stop working. The same if you try to enhance the packages/danno_script/lib/lint_rules/danno_script_lints.dart just by increasing the file by several lines may cause this to stop working. Because of this the original code was leaned much but the functionality for now works as expected.
 
 Specification: none normal available but an intuitive example serves as a specification:
 ```dart
