@@ -6,6 +6,7 @@ Known issues:
 1. In the @$(...) Types are handled/implemented but values like 0.25, 'normal non param name string', non-syntax object Object() are ignored 
 2. if you add another jack methodOne2 calls (like 5 to 20) to the present in the main() the plugin probably may stop working. 
 3. The same if you try to enhance the packages/danno_script/lib/lint_rules/danno_script_lints.dart just by increasing the file by several lines may cause this to stop working. Because of this the original code was leaned much but the functionality for now works as expected.
+4. It might but doesn't have to occasionally not run. Not sure of that but like something happened too early from time to time. Maybe that's not the case.
 
 Specification: none normal available but an intuitive example serves as a specification:
 ```dart
