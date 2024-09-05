@@ -1,3 +1,59 @@
+Specification: none normal available but an intuitive example serves as a specification:
+```dart
+class User {
+  // return type not to be implemented quickly
+  (@$(num, String, Null, $NOT, int, 5.3) dynamic abc, int)? methodOne3(
+          @$(num, String, Null, $NOT, int, 5.3) abcd) =>
+      null;
+  // return type not to be implemented quickly
+  @$(num, String, $NOT, int, 5.3)
+  methodOne2(
+          [@$(
+              String,
+              num,
+              Null,
+              $NOT,
+              int,
+              $IF(
+                  num,
+                  $NOT,
+                  int,
+                  3.50,
+                  $IF('anotherMethodParam', double),
+                  $IF('anotherMethodParam2', String, num, $NOT, int),
+                  $THEN('anotherMethodParam3', Null, String),
+                  $THEN('anotherMethodParam4', String, num, $NOT, int)),
+              $IF(
+                  String,
+                  Null,
+                  $NOT,
+                  $IF('anotherMethodParam', String),
+                  $IF('anotherMethodParam2', String, num, $NOT, int, 5.20),
+                  $THEN('anotherMethodParam3', Null),
+                  // Another independent subcycle baset on thetop level $IF
+                  $IF('anotherMethodParam2', String, num, $NOT, int, 5.20),
+                  $THEN('anotherMethodParam4', String, num, $NOT, int, 2.20),
+                  $IF('anotherMethodParamNonexistent', String, num, $NOT, int,
+                      5.20),
+                  $THEN('anotherMethodParam4', String, num, $NOT, int, 2.20)))
+          Object? anotherMethodParam = 50.3,
+          @$(
+            String,
+            num,
+            Null,
+            $NOT,
+            int,
+            $IF(num, $NOT, int, 3.50, $IF('anotherMethodParam', String),
+                $THEN('anotherMethodParam', Null)),
+          )
+          Object? anotherMethodParam2 = 52.3,
+          Object? anotherMethodParam3 = 53,
+          Object? anotherMethodParam4]) =>
+      null;
+}
+```
+
+
 The Union Types based mostly on custom_lint. First, the required version of Dart IS NOT 3.5 OR 3.6 BUT 3.4 (like 3.4.4). Maybe the following package itself is not significant, but for me the recently discovered rule behind it for me is a game changer. We can put an annotation before a param declaration like this:
 ```dart
 // a method declaration of a class:
