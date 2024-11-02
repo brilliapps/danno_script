@@ -15,12 +15,17 @@ Known issues:
 Specification: none normal available but an intuitive example serves as a specification:
 ```dart
 class User {
-  // return type not to be implemented quickly
+  // record type return return not yet implemented see the following method2() return type - there's something implemented
   (@$(num, String, Null, $NOT, int, 5.3) dynamic abc, int)? methodOne3(
           @$(num, String, Null, $NOT, int, 5.3) abcd) =>
       null;
-  // return type not to be implemented quickly
-  @$(num, String, $NOT, int, 5.3)
+  // dummy f.e. if return is "abc" ?? 5.3 - means "abc" would be ok, 5.3 not - because of $NOT
+  // $M and $N added to make instances, list, map (+ more) literals more useful in the non-static-analysis runtime time world.
+  // $M - mutable means return value must be declared or assigned only once after declaration but can be changed later with a property change for object or or adding/removing element for list, map, etc.
+  // $N - nullable means that return element must be not null but also must be a pointer to a variable (var abc=10) that was declared as with null sign f.e. var int? abc = 10; is ok. (It is necessary it solves one possible problem)
+  // $R means a return element is ok if it matches the regex pattern (you can use more $R() params like for RegEXp constructor)
+  // $B - between - return type for $B(1, 4, true, false, true) , 2 is ok, 3 is ok, 4 is ok, 1 is not, 1.2 is not, 2.2 is not. first bool means element must be num/int/double but with integer value, next bool - includes left limit value - here false 1 is not accepted, last bool includes right value - 4 is ok because we have true here.
+  @$(num, String, /* record type: */(int, String), abc(), [1,2], /* record instance: */(1, null), Null, $R('^a..d\$'), $M($N([0, 1])), $B(1, 2), $NOT, int, 5.3)
   methodOne2(
           [@$(
               String,
