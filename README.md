@@ -1,4 +1,7 @@
 Danno Script (Dart Annotation Script) - an independent meta programming language implemented via dart annotations, lints (custom_lint) and macros. Very early development. Initially created to improve working with types adding such a feature like for example, allowing to call a method with an argument that can be of int or String.
+Caution! You can consider some examples unreasonable - the examples are to point you what is possible and how little limitations it has but you probably in 90% cases will use this like this:
+if a method argument one is null then an argument two must be not null.
+This solution makes implementing method overloading (making more than one method declaration with the same method name unnecessary)
 
 TODO: 
 1. Some explanation how it works, but it can be understood from analisis the following code and image with lint results. 
