@@ -17,8 +17,6 @@ Known issues:
 Specification: none normal available but an intuitive example serves as a specification:
 ```dart
 class User {
-  //5. Adding better handling expressions to work as good as variable/const pointers (value passed with variable name): It is better to use variables like const abc = 'abc $some name' than literal expressions like //'abc', f.e. for string only simple strings without variables are now handled but complex strings with variables passed via variable name/pointer should work well.
-  //6. Not necessary but adding math operations - see 5 - you could still use variable names that were declared with math operation/formula.
   // record type return return not yet implemented see the following method2() return type - there's something implemented
   // dummy f.e. if return is "abc" ?? 5.3 - means "abc" would be ok, 5.3 not - because of $NOT
   // $M and $N added to make instances, list, map (+ more) literals more useful in the non-static-analysis runtime time world.
@@ -26,6 +24,8 @@ class User {
   // $N - nullable means that return element must be not null but also must be a pointer to a variable (var abc=10) that was declared as with null sign f.e. var int? abc = 10; is ok. (It is necessary it solves one possible problem)
   // $R means a return element is ok if it matches the regex pattern (you can use more $R() params like for RegEXp constructor)
   // $B - between - return type for $B(1, 4, true, false, true) , 2 is ok, 3 is ok, 4 is ok, 1 is not, 1.2 is not, 2.2 is not. first bool means element must be num/int/double but with integer value, next bool - includes left limit value - here false 1 is not accepted, last bool includes right value - 4 is ok because we have true here.
+  //5. something works something not: Adding better handling expressions to work as good as variable/const pointers (value passed with variable name): It is better to use variables like const abc = 'abc $some name' than literal expressions like //'abc', f.e. for string only simple strings without variables are now handled but complex strings with variables passed via variable name/pointer should work well.
+  //6. something works something not: Not necessary but adding math operations - see 5 - you could still use variable names that were declared with math operation/formula.
   @$(num, String, /* record type: */(int, String), abc(), [1,2], /* record instance: */(1, null), Null, $R('^a..d\$'), $M($N([0, 1])), $B(1, 2), $NOT, int, 5.3)
   methodOne2(
           [@$(
