@@ -16,9 +16,6 @@ Specification: none normal available but an intuitive example serves as a specif
 ```dart
 class User {
   // record type return return not yet implemented see the following method2() return type - there's something implemented
-  (@$(num, String, Null, $NOT, int, 5.3) dynamic abc, int)? methodOne3(
-          @$(num, String, Null, $NOT, int, 5.3) abcd) =>
-      null;
   // dummy f.e. if return is "abc" ?? 5.3 - means "abc" would be ok, 5.3 not - because of $NOT
   // $M and $N added to make instances, list, map (+ more) literals more useful in the non-static-analysis runtime time world.
   // $M - mutable means return value must be declared or assigned only once after declaration but can be changed later with a property change for object or or adding/removing element for list, map, etc.
