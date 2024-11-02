@@ -20,6 +20,14 @@ Known issues:
 Specification: none normal available but an intuitive example serves as a specification:
 ```dart
 class User {
+  // seek danno_script_lints.dart
+  //return [
+  //    unsomment this line too for handling method arguments //DannoScriptLintsMethod(),
+  //    //DannoScriptLintsReturn(), // this doesn nothing now
+  //    //DannoScriptLintsConstructor(), // this does nothing now
+  //    /*this handles return types for now*/DannoScriptLintsDiscoveryLab()
+  //  ];
+
   // record type return return not yet implemented see the following method2() return type - there's something implemented
   // dummy f.e. if return is "abc" ?? 5.3 - means "abc" would be ok, 5.3 not - because of $NOT
   // $M and $N added to make instances, list, map (+ more) literals more useful in the non-static-analysis runtime time world.
@@ -31,6 +39,7 @@ class User {
   //6. something works something not: Not necessary but adding math operations - see 5 - you could still use variable names that were declared with math operation/formula.
   @$(num, String, /* record type: */(int, String), abc(), [1,2], /* record instance: */(1, null), Null, $R('^a..d\$'), $M($N([0, 1])), $B(1, 2), $NOT, int, 5.3)
   methodOne2(
+         // WARNING! FOR NOW METHOD ARGUMENTS MUST BE UPDATED TO MATCH THE FEATURES WERE ADDED TO RETURN TYPES/INSTANCES - SORRY - WHAT YOU SEE SHOULD WORK, INSTANCES, $M, $N, ETC. SHOULDN'T FOR NOW
           [@$(
               String,
               num,
