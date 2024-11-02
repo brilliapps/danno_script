@@ -5,16 +5,20 @@ TODO:
 2. Add annotation requiring not overriding or overriding the method param $() annotation with the same == $() object.
 3. Implement constructor.
 4. Try to implement the return value like method/constructor params.
-
+5. Adding better handling expressions to work as good as variable/const pointers (value passed with variable name): It is better to use variables like const abc = 'abc $some name' than literal expressions like 'abc', f.e. for string only simple strings without variables are now handled but complex strings with variables passed via variable name/pointer should work well.
+6. Not necessary but adding math operations - see 5 - you could still use variable names that were declared with math operation/formula.
+   
 Known issues:
 1. In the @$(...) Types are handled/implemented but values like 0.25, 'normal non param name string', non-syntax object Object() are ignored 
 2. if you add another jack methodOne2 calls (like 5 to 20) to the present in the main() the plugin probably may stop working. 
 3. The same if you try to enhance the packages/danno_script/lib/lint_rules/danno_script_lints.dart just by increasing the file by several lines may cause this to stop working. Because of this the original code was leaned much but the functionality for now works as expected.
 4. It might but doesn't have to occasionally not run. Not sure of that but like something happened too early from time to time. Maybe that's not the case.
-
+   
 Specification: none normal available but an intuitive example serves as a specification:
 ```dart
 class User {
+  //5. Adding better handling expressions to work as good as variable/const pointers (value passed with variable name): It is better to use variables like const abc = 'abc $some name' than literal expressions like //'abc', f.e. for string only simple strings without variables are now handled but complex strings with variables passed via variable name/pointer should work well.
+  //6. Not necessary but adding math operations - see 5 - you could still use variable names that were declared with math operation/formula.
   // record type return return not yet implemented see the following method2() return type - there's something implemented
   // dummy f.e. if return is "abc" ?? 5.3 - means "abc" would be ok, 5.3 not - because of $NOT
   // $M and $N added to make instances, list, map (+ more) literals more useful in the non-static-analysis runtime time world.
