@@ -763,6 +763,65 @@ final class $THEN {
   }
 }
 
+/// means mutable - $M is used for shorter syntax and by this readability
+final class $M {
+  final dynamic t1;
+
+  /// This property is because in static alalysis i don't know any other way to read if an extending class is also $IF descendant
+  /// but the getField method of DartObject works.
+  /// extending this base class could be implemented later. - see the important [myCustomGetCustomLint] method
+  final bool is$MUTABLE = true;
+
+  const $M(this.t1);
+}
+
+/// Normally $(String, int, Null) - accepts "abc", 10, null, but $(String, $N(int)) accepts 1: 'abc', but 2: 10/null which is declared as variable with int? type
+/// Warnin (Warning! think over/work it out: String? variable will value null will not pass in, only null of int? variable) - not flexible rarely useful as for the f.e. returned value to match it can't have just detected type int or Null but must be variable name that was declared exactly as int? and return 10 or null for example.
+final class $N {
+  final dynamic t1;
+
+  /// This property is because in static alalysis i don't know any other way to read if an extending class is also $IF descendant
+  /// but the getField method of DartObject works.
+  /// extending this base class could be implemented later. - see the important [myCustomGetCustomLint] method
+  final bool is$TypeOrNullType = true;
+
+  const $N(this.t1);
+}
+
+/// means Regexp - A string expression will be matched against this regex
+final class $R {
+  final String t1; // source
+  final bool t2; // multiline
+  final bool t3; // case sensitive
+  final bool t4; // unicode
+  final bool t5; // isdotall
+
+  /// This property is because in static alalysis i don't know any other way to read if an extending class is also $IF descendant
+  /// but the getField method of DartObject works.
+  /// extending this base class could be implemented later. - see the important [myCustomGetCustomLint] method
+  final bool is$REGEX = true;
+
+  const $R(this.t1,
+      [this.t2 = false, this.t3 = true, this.t4 = false, this.t5 = false]);
+}
+
+/// means Between - An expression representing number will be checked if it is in the grater - less zone with including or not the left and right limit values
+final class $B {
+  final num t1; // left limit value
+  final num t2; // right limit value
+  final bool
+      t3; // must be int-like (may be type double but integer - to enforce can't be double use f.e. @$(num $B(...) $NOT double))
+  final bool t4; // includes left limit value
+  final bool t5; // includes right limit value
+
+  /// This property is because in static alalysis i don't know any other way to read if an extending class is also $IF descendant
+  /// but the getField method of DartObject works.
+  /// extending this base class could be implemented later. - see the important [myCustomGetCustomLint] method
+  final bool is$Between = true;
+
+  const $B(this.t1, this.t2, [this.t3 = false, this.t4 = true, this.t5 = true]);
+}
+
 enum $AnnoTypesTypeOfLintReport {
   NONE,
   INFO,
@@ -773,56 +832,52 @@ enum $AnnoTypesTypeOfLintReport {
 
 class Custom$ extends $ {}
 
+sealed class UserType {
+  const UserType();
+}
+
+final class UserTypeOne extends UserType {
+  final abc;
+  const UserTypeOne([this.abc = 10]);
+}
+
+final class UserTypeTwo extends UserType {
+  const UserTypeTwo();
+}
+
+final class UserTypeThree extends UserType {
+  const UserTypeThree();
+}
+
+const someIntGlobal = 87;
+
 class User {
-  // return type not to be implemented quickly
-  (@$(num, String, Null, $NOT, int, 5.3) dynamic abc, int)? methodOne3(
-          @$(num, String, Null, $NOT, int, 5.3) abcd) =>
-      null;
-  // return type not to be implemented quickly
-  @$(num, String, $NOT, int, 5.3)
-  methodOne2(
-          [@$(
-              String,
-              num,
-              Null,
-              $NOT,
-              int,
-              $IF(
-                  num,
-                  $NOT,
-                  int,
-                  3.50,
-                  $IF('anotherMethodParam', double),
-                  $IF('anotherMethodParam2', String, num, $NOT, int),
-                  $THEN('anotherMethodParam3', Null, String),
-                  $THEN('anotherMethodParam4', String, num, $NOT, int)),
-              $IF(
-                  String,
-                  Null,
-                  $NOT,
-                  $IF('anotherMethodParam', String),
-                  $IF('anotherMethodParam2', String, num, $NOT, int, 5.20),
-                  $THEN('anotherMethodParam3', Null),
-                  // Another independent subcycle baset on thetop level $IF
-                  $IF('anotherMethodParam2', String, num, $NOT, int, 5.20),
-                  $THEN('anotherMethodParam4', String, num, $NOT, int, 2.20),
-                  $IF('anotherMethodParamNonexistent', String, num, $NOT, int,
-                      5.20),
-                  $THEN('anotherMethodParam4', String, num, $NOT, int, 2.20)))
-          Object? anotherMethodParam = 50.3,
-          @$(
-            String,
-            num,
-            Null,
-            $NOT,
-            int,
-            $IF(num, $NOT, int, 3.50, $IF('anotherMethodParam', String),
-                $THEN('anotherMethodParam', Null)),
-          )
-          Object? anotherMethodParam2 = 52.3,
-          Object? anotherMethodParam3 = 53,
-          Object? anotherMethodParam4]) =>
-      null;
+  const User();
+
+  static const int? someInt = 10;
+  static const double? someDouble = 5.2;
+  static const someString = 'some user instance string';
+  static const someUserType = const UserTypeTwo();
+  static const UserTypeOne? someUserTypeOne =
+      UserTypeOne(UserTypeOne(UserTypeOne(12)));
+  static const List<int>? someList = [10, 21];
+  static const Map<int, String>? someMap = {10: "Abc", 21: "Cdef"};
+  static const (int, String)? someRecord = (10, 'Rec');
+
+  @$(num, String, Null, $R('^a..d\$'))
+  methodOne4Simple(
+          [@$(num, String, Null, $NOT, int, 5.3) abcd = someInt ??
+              someInt ??
+              (someInt == 10
+                  ? someInt
+                  : someInt == 10
+                      ? (10, 'Some string.')
+                      : null) ??
+              345.43]) =>
+      //const // const will pass this but we don't need this requirement, also $MUTABLE OR $CONST ADDING
+      /*checkingReturnTypesAndValues() catched error: i==4 (meta = i but Annotation argument has index i-1) e = Null check operator used on a null value, stackTrace #0      DannoScriptLintsDiscoveryLab.run.compareValueFromUltimateExpressionWithAnotherUltimateValue 
+      (package:danno_script_lints/lint_rules/danno_script_lints_discovery_lab.dart:1284:61) */
+      'abcd';
 }
 
 class tta {
@@ -833,29 +888,24 @@ class tta2 extends tta {
   int methodw([asdf = 10]) => 10;
 }
 
-void main() {
+class ExampleConstComputableInvokationParam {
+  final int abc = 10;
+  const ExampleConstComputableInvokationParam();
+}
+
+class ExampleAAA {
+  double b, c = 10.1, e = 20.2;
   int a = 10;
+  ExampleAAA();
+}
+
+void main() {
+  const int a = 10;
+  @$(num, String, $NOT, int)
   String abc = 'abc ${a} abc';
   final jack = User();
-  List<Map<int, int>> ertret = [];
-  List<Map<int, String>> ertret2 = [];
+  abc = 'Example text';
+  abc = 'Example text2asasas';
 
-  jack.methodOne3(10);
-  jack.methodOne3(0.28);
-
-  jack.methodOne2(ertret, 10, 20.5, 30); // valid - blue underscore
-  jack.methodOne2(ertret2); // invalid - red underscore
-  // Some earlier examples
-  jack.methodOne2(19); // valid - blue underscore
-  jack.methodOne2(19.2); // valid - blue underscore
-  jack.methodOne2(19.2, 10, 20.5, 30); // valid - blue underscore
-  jack.methodOne2(19.2, 10.2, 20.5, 30); // valid - blue underscore
-  jack.methodOne2(19.2, 10.2, null, 30); // valid - blue underscore
-  jack.methodOne2(19.2, 10.2, null, 2.5); // valid - blue underscore
-  jack.methodOne2(null); // valid - blue underscore
-
-  jack.methodOne2(
-      '''Oh no, String ${a} is not allowed'''); // invalid - red underscore
-  jack.methodOne2('Oh no, String ${a} is not allowed', 10.2, null, 2.5);
-  jack.methodOne2('Oh no, String ${a} is not allowed', 10.2, 'abc', 2.5);
+  return;
 }
