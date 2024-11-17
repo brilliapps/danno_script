@@ -253,6 +253,8 @@ class User {
   }
 ```
 
+SOME OLDER STUFF, I PROPOSE NOT TO THINK OF IT MUCH NOW.
+
 ![image](https://raw.githubusercontent.com/brilliapps/danno_script/main/assets/danno_script_1.jpg)
 
 Here is the example lint undersores with red meaning errors, especially under an argument to a function or if an argument was not found then under a method name.
