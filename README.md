@@ -80,6 +80,8 @@ class User {
   // dummy f.e. if return is "abc" ?? 5.3 - means "abc" would be ok, 5.3 not - because of $NOT
   // $M and $N added to make instances, list, map (+ more) literals more useful in the non-static-analysis runtime time world.
   // $M - mutable means return value must be declared or assigned only once after declaration but can be changed later with a property change for object or or adding/removing element for list, map, etc.
+  // So for $M call an object passed as param has params or emtpy params call, and they (or elements of a list/map etc.) at the moment of declaration is sort of signature making the object recognizable
+  // for static analysis tool for it to know. Again it is to make this danno script more useful.  
   // $N - nullable means that return element must be not null but also must be a pointer to a variable (var abc=10) that was declared as with null sign f.e. var int? abc = 10; is ok. (It is necessary it solves one possible problem)
   // $R means a return element is ok if it matches the regex pattern (you can use more $R() params like for RegEXp constructor)
   // $B - between - return type for $B(1, 4, true, false, true) , 2 is ok, 3 is ok, 4 is ok, 1 is not, 1.2 is not, 2.2 is not. first bool means element must be num/int/double but with integer value, next bool - includes left limit value - here false 1 is not accepted, last bool includes right value - 4 is ok because we have true here.
