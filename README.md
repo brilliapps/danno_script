@@ -1,9 +1,12 @@
+WARNING! MONITOR THE SIZE OF TWO (two) .LOG FILES (dont remember custom_list.log or similar)
+
 WARNING! AFTER THE LAST COMMIT (OR SERIES OF) METHOD PARAMS HAVE BEEN TURNED OF, ONLY RETURN TYPES/VALUES ARE HANDLED. THIS IS BECAUSE METHOD PARAMS ARE LAGGING BEHIND WITH SOME FEATURES. You can turn them on ofcourse easily.
 Danno Script (Dart Annotation Script) - an independent meta programming language implemented via dart annotations, lints (custom_lint) and macros. Very early development. Initially created to improve working with types adding such a feature like for example, allowing to call a method with an argument that can be of int or String.
 Caution! You can consider some examples unreasonable - the examples are to point you what is possible and how little limitations it has but you probably in 90% cases will use this like this:
 if a method argument one is null then an argument two must be not null.
 This solution makes implementing method overloading (making more than one method declaration with the same method name) unnecessary
 
+[Edit:] Good to know that it is to be much more precise pintpointing to types and values for example (from my memory to be verified again) in dart when an expression is like this staticallyunknowncondition? 'abc' : 5; the type of the entire expression is the closest to the both values so it is Object for staticallyunknowncondition? 5.5 : 5 it is num not Object, but the danno types for the first example staticallyunknowncondition? 'abc' : 5 sees the expression can be String or int, for the second example staticallyunknowncondition? 5.5 : 5 it recognises it is double or int. it takes into account sub conditional expressions getting to the ultimate non conditional possible-to-be-used-at-runtime-time expressions/values/types. 
 
 [HIGHLIGHTS FROM LAST SERIES OF COMMITS:] 
 Json-encode-friendly Data-classes-like feature with handling nesting or requirements f.e list in a list, list in a map, map in a list with a record value in a map - all meeting your requirements or showing lint error etc. you may allow some parts of it to be const or mutable (assigned only once in lifetime cycle (f.e. int abc = 10; or abc = 10; but not assigned twice or more) but modified afterwards):
@@ -30,14 +33,14 @@ for example (read comments) (a full printscreen showing lint errors, involving d
    return 
         { // entire Set passes - it can be not const ($M) but has must have const list
           const [
-            1,
-            const [6, 8] // passes because the last element can be eight
+            1, // the first element must be "1" and it is
+            const [6, 8] // passes because must be const list and has nested $(call which requires the value to be of double type or value 8) the last element can be eight
           ]
         } ??
         {
           const [
             1,
-            const [6, 8.5] // passes because the last element is double
+            const [6, 8.5] // passes because the last element is of double
           ]
         } ??
         // ! THIS IS THE ONLY SIMILAR SET THAT DOESN'T PASS - READ IT'S COMMENTS
@@ -76,6 +79,7 @@ class User {
   //    /*this handles return types for now*/DannoScriptLintsDiscoveryLab()
   //  ];
 
+  // [Edit:] new feature, nested $() calls, f.e @$(TestClass(1, $('abcdefsqqqhf213342334571', $R('^a.*2\$'))) see explanations elsewhere in the document
   // record type return return not yet implemented see the following method2() return type - there's something implemented
   // dummy f.e. if return is "abc" ?? 5.3 - means "abc" would be ok, 5.3 not - because of $NOT
   // $M and $N added to make instances, list, map (+ more) literals more useful in the non-static-analysis runtime time world.
@@ -134,11 +138,119 @@ class User {
       null;
 }
 ```
-WARNING! MONITOR THE SIZE OF TWO .LOG FILES (dont remember custom_log.log or similar)
 [Edit 20241117:] let's focus on first on the currently best implemented return value of a method and try to break the stuff down under the following printscreen:
+
 ![image](https://raw.githubusercontent.com/brilliapps/danno_script/main/assets/example_1.jpg)
+
 ```dart
-    // here we go in a while
+
+  static const tretretretertert = $({'abe', 'erw'});
+  static const sourceOf$InstanceRecord = $((2, tretretretertert));
+  static const werwerwerwerwerwer = (2, ({'abe', 'erw'}));
+  static const correspondingSimpleValueForSourceOf$InstanceRecord =
+      (2, werwerwerwerwerwer);
+
+  static const sourceOf$InstanceMap = $({'abc': 'cde'});
+  static const correspondingSimpleValueForSourceOf$InstanceMap =
+      (2, (2, ({'abc': 'cde'})));
+
+  @$(
+      num, // can be a value of type num
+      TestClass, // can be an instance of type TestClass
+      {'abc': (2, sourceOf$InstanceRecord)}, // can be const set like this (const because not in $M() instance)
+      $M({
+        [
+          1,
+          $([6, $(double, 8)]) // nested $() call with complex requirements for the second element of the list
+            // the list inside $() can be [6, 5.5] [6, 8], not [6, 9] see examples
+        ]
+      }), // can be set like this not const because in $M (not const - assigned with value only once in a lifetime but later the set changed freely)
+      List, // can be any list (List<dynami, dynamic> so List<Object, Stream> too)
+      {'wer', 'r'}, // this set but const
+      $NOT, // !!! NOW WE ARE CHANGING INTO WHAT IT CAN'T BE
+      $M(TestClass(1, $('abcdefsqqqhf213342334571', $R('^a.*2\$')))), // See explanations to return values like: TestClass(...)
+      int, // see $NOT earlier so can't be int (but can be num - see the num at the beginning of "num")
+      $M([
+        1,
+        $([6])
+      ]), // see examples - exercise what you expect: you should already imagine 
+      5.3, // See $NOT earlier so: can't be 5.3 value - already know that can be num, can't be int so can be double, but with no 5.3 value
+      $M([2, 3]) // can be not const list [2, 3] 
+      )
+  methodOne4Simple(
+      [@$(num, String, Null, $NOT, int, 5.3) abcd = someInt ??
+          someInt ??
+          (someInt == 10
+              ? someInt
+              : someInt == 10
+                  ? (10, 'Some string.')
+                  : null) ??
+          345.43]) {
+    return const {'abc': correspondingSimpleValueForSourceOf$InstanceRecord} ??
+        // no error because is num is not int and is not 5.8
+        5.8 ??
+        { // entire Set passes - it can be NOT const (inside $M()) but has must have const list
+          const [
+            1, // the first element must be "1" and it is
+            const [6, 8] // passes because must be const list and has nested $(call which requires the value to be of double type or value 8) the last element can be eight
+          ]
+        } ??
+        {
+          const [
+            1,
+            const [6, 8.5] // passes because the last element is of double
+          ]
+        } ??
+        // ! THIS IS THE ONLY SIMILAR SET THAT DOESN'T PASS - READ IT'S COMMENTS
+        {
+          const [
+            1,
+            const [6, 9] // entire Set doesn't pass because 9 is not 8 and isn't double
+          ]
+        }      
+      }
+         ??
+         // the following is errror lint because it matches but is after the $NOT clause (means: it can't be)
+        [ // entire list matches because it doesn't have t obe mutable
+          1, // must have value 1 - it has
+          const [6] // must be immutable const list (it is not inside $M()), has value "6"
+        ] ?? // try to focus now: 
+        // lets try to break down the following - it matches two rules from the @$() annotation call this part:
+        // first before the $NOT - there is ... TestClass, ... which would mean that there would be no lint error 
+        // because the TestClass() instance creationg call is of type TestClass - no constructor arguments are important
+        // following?
+        // But there it matches the second rule after the $NOT instruction which tells you what something cannot be:
+        // the rule from @$ annotation call it matches is:
+        // $M(TestClass(1, $('abcdefsqqqhf213342334571', $R('^a.*2\$'))))
+        // so it is a TestClass() call and it is not a const Object, but because it is in $M(TestClass...) it doesn't have to be const
+        // the first param inside constructor params must be value 1 and it is
+        // the second param requirement is a nested $() call so it must one of the following values:
+        // 'abcdefsqqqhf213342334571' - it isn't - it has the "2" at the end of sring - you would have to remove the "2"            
+        // but it matches the second value exactly a regular expression requirement inside $R() call (btw. $B for numbers - betweend) - the regex rule says the string must start with a and and with 2 and it does.
+        // so the following call matches but is after $NOT instruction was places in the @$() annotation call so this is a lint error.
+        // BUT if the @$ rule was not inside $M() - just by this the following TestClass call wouldn't batch and there would be no lint error, difficult?
+        TestClass(1, 'abcdefsqqqhf2133423345712') ??
+        // following shows lint error: is num, but after $NOT there is int so it cannot be int
+        5 ??
+        5.5 ??
+        // following shows lint error: is num, and after $NOT there is int but the value is not int but after $NOT there is also 5.3 value and it matches it so it can't be 5.3 so shows lint error
+        5.3 ??
+        // tired of explaining, excercise - why no lint error
+        // SEE IT IS AGAIN RETURNED IN THE FOLLOWING FANCY CIRCUMSTANCES :)
+        const {
+          'abc': (2, (2, {'abe', 'erw'}))
+        } ??
+        // AND SPECIAL TREAT, danno_type goes comprehensively and handles at least dome function calls - don't remember what
+        () {
+          // So this is not lint error AS IN THE previous exactly the same return
+          return const {
+            'abc': (2, (2, {'abe', 'erw'}))
+          };
+          // why this is dead code this shows lint error why 
+          // it matches after $NOT (can't be but it is) the rule $M([2, 3]) // can be: not const list [2, 3] and it is not const list ...
+          return [2, 3];
+        }();
+  }
 ```
 
 ![image](https://raw.githubusercontent.com/brilliapps/danno_script/main/assets/danno_script_1.jpg)
