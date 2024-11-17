@@ -1,7 +1,55 @@
+WARNING! AFTER THE LAST COMMIT (OR SERIES OF) METHOD PARAMS HAVE BEEN TURNED OF, ONLY RETURN TYPES/VALUES ARE HANDLED. THIS IS BECAUSE METHOD PARAMS ARE LAGGING BEHIND WITH SOME FEATURES. You can turn them on ofcourse easily.
 Danno Script (Dart Annotation Script) - an independent meta programming language implemented via dart annotations, lints (custom_lint) and macros. Very early development. Initially created to improve working with types adding such a feature like for example, allowing to call a method with an argument that can be of int or String.
 Caution! You can consider some examples unreasonable - the examples are to point you what is possible and how little limitations it has but you probably in 90% cases will use this like this:
 if a method argument one is null then an argument two must be not null.
 This solution makes implementing method overloading (making more than one method declaration with the same method name) unnecessary
+
+
+[HIGHLIGHTS FROM LAST SERIES OF COMMITS:] 
+Json-encode-friendly Data-classes-like feature with handling nesting or requirements f.e list in a list, list in a map, map in a list with a record value in a map - all meeting your requirements or showing lint error etc. you may allow some parts of it to be const or mutable (assigned only once in lifetime cycle (f.e. int abc = 10; or abc = 10; but not assigned twice or more) but modified afterwards):
+Just added a game changing feature for now for return values only:
+A json encode friendly nested $() calls on constructor-like calls which involves syntax like abc(1,2), [1,2], {1,2}, {'a':'b'} (1, b:2)
+What's the point you can require a return value (later variable declaration, assignment, method/constructor param, etc.) to be exactly like this (or show lint error):
+```dart
+{   
+    const [
+    1,
+    const [6, 8] 
+  ]
+}```
+and you can write f.e. a extension type/ macro, etc for Set/List/Value that converts it to json string.
+for example (read comments) (a full printscreen showing lint errors, involving different cases later in code under the specs probably):
+```dart
+  @$(
+      $M({
+        [
+          1,
+          $([6, $(double, 8)])
+        ]
+      }) someMethod() {
+   return 
+        { // entire Set passes - it can be not const ($M) but has must have const list
+          const [
+            1,
+            const [6, 8] // passes because the last element can be eight
+          ]
+        } ??
+        {
+          const [
+            1,
+            const [6, 8.5] // passes because the last element is double
+          ]
+        } ??
+        // ! THIS IS THE ONLY SIMILAR SET THAT DOESN'T PASS - READ IT'S COMMENTS
+        {
+          const [
+            1,
+            const [6, 9] // entire Set doesn't pass because 9 is not 8 and isn't double
+          ]
+        }      
+      }
+```
+
 
 TODO: 
 1. Some explanation how it works, but it can be understood from analisis the following code and image with lint results. 
@@ -17,7 +65,7 @@ Known issues:
 3. The same if you try to enhance the packages/danno_script/lib/lint_rules/danno_script_lints.dart just by increasing the file by several lines may cause this to stop working. Because of this the original code was leaned much but the functionality for now works as expected.
 4. It might but doesn't have to occasionally not run. Not sure of that but like something happened too early from time to time. Maybe that's not the case.
    
-Specification: none normal available but an intuitive example serves as a specification:
+Specification (some example prinscreen[s]? below with breaking down why yes/no lint error): none normal available but an intuitive example serves as a specification:
 ```dart
 class User {
   // seek danno_script_lints.dart
@@ -84,6 +132,15 @@ class User {
       null;
 }
 ```
+WARNING! MONITOR THE SIZE OF TWO .LOG FILES (dont remember custom_log.log or similar)
+[Edit 20241117:] let's focus on first on the currently best implemented return value of a method and try to break the stuff down under the following printscreen:
+![image](https://raw.githubusercontent.com/brilliapps/danno_script/main/assets/example_1.jpg)
+```dart
+    // here we go in a while
+```
+
+![image](https://raw.githubusercontent.com/brilliapps/danno_script/main/assets/danno_script_1.jpg)
+
 Here is the example lint undersores with red meaning errors, especially under an argument to a function or if an argument was not found then under a method name.
 
 ![image](https://raw.githubusercontent.com/brilliapps/danno_script/main/assets/danno_script_1.jpg)

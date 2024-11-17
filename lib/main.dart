@@ -849,6 +849,19 @@ final class UserTypeThree extends UserType {
   const UserTypeThree();
 }
 
+class TestClass {
+  final int a;
+  // TODO: not implemented:
+  // annotation means here an element must be String in normal instance creation,
+  // but inside @$ when analyzed with danno_script $() instance is allowed f.e. @$(String, $R('a..d'))
+  // also element annotated like here must be initialized directly in () bracket with no default value - simply this.b
+  // ? however the element may not be passed as constructor param when null is allowed f.e.: @$(String, Null, $)
+  @$(String, Null, $)
+  final Object? b;
+
+  const TestClass(this.a, this.b);
+}
+
 const someIntGlobal = 87;
 
 class User {
@@ -863,21 +876,88 @@ class User {
   static const List<int>? someList = [10, 21];
   static const Map<int, String>? someMap = {10: "Abc", 21: "Cdef"};
   static const (int, String)? someRecord = (10, 'Rec');
+  static const sourceOf$Instance = $(TestClass(1, 'abcdefsqqqhf21334233457'));
+  static const correspondingSimpleValueForSourceOf$Instance =
+      TestClass(1, 'abcdefsqqqhf21334233457');
 
-  @$(num, String, Null, $R('^a..d\$'))
+  static const tretretretertert = $({'abe', 'erw'});
+  static const sourceOf$InstanceRecord = $((2, tretretretertert));
+  static const werwerwerwerwerwer = (2, ({'abe', 'erw'}));
+  static const correspondingSimpleValueForSourceOf$InstanceRecord =
+      (2, werwerwerwerwerwer);
+
+  static const sourceOf$InstanceMap = $({'abc': 'cde'});
+  static const correspondingSimpleValueForSourceOf$InstanceMap =
+      (2, (2, ({'abc': 'cde'})));
+
+  @$(
+      num,
+      TestClass,
+      {'abc': (2, sourceOf$InstanceRecord)},
+      $M({
+        [
+          1,
+          $([6, $(double, 8)])
+        ]
+      }),
+      List,
+      {'wer', 'r'},
+      $NOT,
+      $M(TestClass(1, $('abcdefsqqqhf213342334571', $R('^a.*2\$')))),
+      int,
+      $M([
+        1,
+        $([6])
+      ]),
+      5.3,
+      $M([2, 3]))
   methodOne4Simple(
-          [@$(num, String, Null, $NOT, int, 5.3) abcd = someInt ??
-              someInt ??
-              (someInt == 10
-                  ? someInt
-                  : someInt == 10
-                      ? (10, 'Some string.')
-                      : null) ??
-              345.43]) =>
-      //const // const will pass this but we don't need this requirement, also $MUTABLE OR $CONST ADDING
-      /*checkingReturnTypesAndValues() catched error: i==4 (meta = i but Annotation argument has index i-1) e = Null check operator used on a null value, stackTrace #0      DannoScriptLintsDiscoveryLab.run.compareValueFromUltimateExpressionWithAnotherUltimateValue 
-      (package:danno_script_lints/lint_rules/danno_script_lints_discovery_lab.dart:1284:61) */
-      'abcd';
+      [@$(num, String, Null, $NOT, int, 5.3) abcd = someInt ??
+          someInt ??
+          (someInt == 10
+              ? someInt
+              : someInt == 10
+                  ? (10, 'Some string.')
+                  : null) ??
+          345.43]) {
+    return const {'abc': correspondingSimpleValueForSourceOf$InstanceRecord} ??
+        5.8 ??
+        {
+          const [
+            1,
+            const [6, 8]
+          ]
+        } ??
+        {
+          const [
+            1,
+            const [6, 8.5]
+          ]
+        } ??
+        {
+          const [
+            1,
+            const [6, 9]
+          ]
+        } ??
+        [
+          1,
+          const [6]
+        ] ??
+        TestClass(1, 'abcdefsqqqhf2133423345712') ??
+        5 ??
+        5.5 ??
+        5.3 ??
+        const {
+          'abc': (2, (2, {'abe', 'erw'}))
+        } ??
+        () {
+          return const {
+            'abc': (2, (2, {'abe', 'erw'}))
+          };
+          return [2, 3];
+        }();
+  }
 }
 
 class tta {
@@ -901,11 +981,6 @@ class ExampleAAA {
 
 void main() {
   const int a = 10;
-  @$(num, String, $NOT, int)
-  String abc = 'abc ${a} abc';
-  final jack = User();
-  abc = 'Example text';
-  abc = 'Example text2asasas';
 
   return;
 }

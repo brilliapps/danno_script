@@ -30,12 +30,2303 @@ class DannoScriptLintsDiscoveryLab extends DartLintRule {
   DannoScriptLintsDiscoveryLab() : super(code: _code);
 
   // if there were info or warning level messages they didn't display when there were also error level messages. This makes relevant messages error
-  final bool msgDebugMode = true;
-
+  final bool msgDebugMode = false;
+  final bool displayErrorsOnly = true;
   static const _code = LintCode(
       name: 'anno_types_error',
       problemMessage: 'The ',
       errorSeverity: errors.ErrorSeverity.ERROR);
+
+  int standardNumberOfFields = 100;
+
+  /// An expression may be an Identifier - you cen get from the identifier another identifier or Expression that may be a Literal like ListLiteral or RecordLiteral, (2, 'abc' are also literals but we seek especially $() instance creation).
+  /// So this is to get you anything ultimate non Identifier expression
+  Expression? getUltimateNonIdentifierExpression(
+    ErrorReporter reporter,
+    Map<dynamic, List<ReturnStatement>> returnStatements,
+    Map<int, List<AssignmentExpression>> assignmentExpressionsByElementId,
+    Map<int, List<VariableDeclaration>> variableDeclarationsByElementId,
+    Expression expression, [
+    // for placing diagnostic or diagnostic-error massages
+    Expression? expression2,
+    Object? diagnosticMessageNode,
+  ]) {
+    addLintMessage(
+        reporter,
+        diagnosticMessageNode ?? expression ?? expression2!,
+        msgDebugMode ? errors.ErrorSeverity.ERROR : errors.ErrorSeverity.INFO,
+        'compareValueFromUltimateExpressionWithAnotherUltimateValue() calls hasInstanceCreationLikeExpressionAny\$() part InstanceCreationExpression() second \$() #0.1.x.1 ');
+    if (expression is! Identifier) {
+      addLintMessage(
+          reporter,
+          diagnosticMessageNode ?? expression ?? expression2!,
+          msgDebugMode ? errors.ErrorSeverity.ERROR : errors.ErrorSeverity.INFO,
+          'compareValueFromUltimateExpressionWithAnotherUltimateValue() calls hasInstanceCreationLikeExpressionAny\$() part InstanceCreationExpression() second \$() #0.1.x.2 ');
+      return expression;
+    }
+    while (true) {
+      /// value2 - the name is to point that it is to work with the second comparison expression of compareValueFromUltimateExpressionWithAnotherUltimateValue method
+      var value2 = getComparableValueFromExpressionOrDartObject(
+          reporter,
+          returnStatements,
+          assignmentExpressionsByElementId,
+          variableDeclarationsByElementId,
+          expression,
+          null,
+          expression);
+      if (!value2.valueHasBeenFound ||
+          value2.value == null ||
+          value2.value![ComparableUltimateValue.expression] == null) {
+        addLintMessage(
+            reporter,
+            diagnosticMessageNode ?? expression ?? expression2!,
+            msgDebugMode
+                ? errors.ErrorSeverity.ERROR
+                : errors.ErrorSeverity.INFO,
+            'compareValueFromUltimateExpressionWithAnotherUltimateValue() calls hasInstanceCreationLikeExpressionAny\$() part InstanceCreationExpression() second \$() #0.1.x.3 value2 = ${value2} taken from expression = ${expression} expression.runtimeType = ${expression.runtimeType}  expression.staticType = ${expression.staticType}');
+        return null;
+      }
+      if (value2.value![ComparableUltimateValue.expression] is Identifier) {
+        expression =
+            value2.value![ComparableUltimateValue.expression] as Identifier;
+        addLintMessage(
+            reporter,
+            diagnosticMessageNode ?? expression ?? expression2!,
+            msgDebugMode
+                ? errors.ErrorSeverity.ERROR
+                : errors.ErrorSeverity.INFO,
+            'compareValueFromUltimateExpressionWithAnotherUltimateValue() calls hasInstanceCreationLikeExpressionAny\$() part InstanceCreationExpression() second \$() #0.1.x.3.5 value2 = ${value2} taken from expression = ${expression} expression.runtimeType = ${expression.runtimeType}  expression.staticType = ${expression.staticType}');
+        continue;
+      } else {
+        addLintMessage(
+            reporter,
+            diagnosticMessageNode ?? expression ?? expression2!,
+            msgDebugMode
+                ? errors.ErrorSeverity.ERROR
+                : errors.ErrorSeverity.INFO,
+            'compareValueFromUltimateExpressionWithAnotherUltimateValue() calls hasInstanceCreationLikeExpressionAny\$() part InstanceCreationExpression() second \$() #0.1.x.4 ');
+        return value2.value![ComparableUltimateValue.expression] as Expression;
+      }
+    }
+  }
+
+  /// Extracting expressions only from param list f.e. abc(1, $(List)), but f.e. [1, $(double), 4] - param expressions is 1, $(double), 4
+  bool hasInstanceCreationLikeExpressionAny$Param(
+    ErrorReporter reporter,
+    Map<dynamic, List<ReturnStatement>> returnStatements,
+    Map<int, List<AssignmentExpression>> assignmentExpressionsByElementId,
+    Map<int, List<VariableDeclaration>> variableDeclarationsByElementId,
+    Expression expression, [
+    // for placing diagnostic or diagnostic-error massages
+    Expression? expression2,
+    Object? diagnosticMessageNode,
+  ]) {
+    addLintMessage(
+        reporter,
+        diagnosticMessageNode ?? expression ?? expression2!,
+        msgDebugMode ? errors.ErrorSeverity.ERROR : errors.ErrorSeverity.INFO,
+        'compareValueFromUltimateExpressionWithAnotherUltimateValue() calls hasInstanceCreationLikeExpressionAny\$()Param part InstanceCreationExpression() second \$() #0.1.1 ');
+    List<CollectionElement>? arguments;
+    List<Expression> paramExpressions = [];
+    if (expression is InstanceCreationExpression) {
+      arguments = expression.argumentList.arguments;
+    } else if (expression is ListLiteral) {
+      arguments = expression.elements;
+    } else if (expression is SetOrMapLiteral) {
+      arguments = expression.elements;
+    } else if (expression is RecordLiteral) {
+      arguments = expression.fields;
+    }
+    if (arguments == null) {
+      addLintMessage(
+          reporter,
+          diagnosticMessageNode ?? expression ?? expression2!,
+          msgDebugMode ? errors.ErrorSeverity.ERROR : errors.ErrorSeverity.INFO,
+          'compareValueFromUltimateExpressionWithAnotherUltimateValue() calls hasInstanceCreationLikeExpressionAny\$() part InstanceCreationExpression() second \$() #0.1.2 ');
+      return false;
+    }
+    for (int k = 0; k < arguments.length; k++) {
+      if (arguments[k] is MapLiteralEntry) {
+        var key = getUltimateNonIdentifierExpression(
+            reporter,
+            returnStatements,
+            assignmentExpressionsByElementId,
+            variableDeclarationsByElementId,
+            (arguments[k] as MapLiteralEntry).key,
+            null,
+            diagnosticMessageNode);
+        var value = getUltimateNonIdentifierExpression(
+            reporter,
+            returnStatements,
+            assignmentExpressionsByElementId,
+            variableDeclarationsByElementId,
+            (arguments[k] as MapLiteralEntry).value,
+            null,
+            diagnosticMessageNode);
+
+        addLintMessage(
+            reporter,
+            diagnosticMessageNode ?? expression ?? expression2!,
+            msgDebugMode
+                ? errors.ErrorSeverity.ERROR
+                : errors.ErrorSeverity.INFO,
+            'compareValueFromUltimateExpressionWithAnotherUltimateValue() calls hasInstanceCreationLikeExpressionAny\$() part InstanceCreationExpression() second \$() #0.1.8? key=$key, value=$value');
+
+        if (key is InstanceCreationExpression &&
+                key.constructorName.name?.name == '\$' ||
+            value is InstanceCreationExpression &&
+                value.constructorName.name?.name == '\$') {
+          addLintMessage(
+              reporter,
+              diagnosticMessageNode ?? expression ?? expression2!,
+              msgDebugMode
+                  ? errors.ErrorSeverity.ERROR
+                  : errors.ErrorSeverity.INFO,
+              'compareValueFromUltimateExpressionWithAnotherUltimateValue() calls hasInstanceCreationLikeExpressionAny\$() part InstanceCreationExpression() second \$() #0.1.3 key or value is \$() instance creation');
+          return true;
+        }
+      } else {
+        addLintMessage(
+            reporter,
+            diagnosticMessageNode ?? expression ?? expression2!,
+            msgDebugMode
+                ? errors.ErrorSeverity.ERROR
+                : errors.ErrorSeverity.INFO,
+            'compareValueFromUltimateExpressionWithAnotherUltimateValue() calls hasInstanceCreationLikeExpressionAny\$() part InstanceCreationExpression() second \$() #0.1.4 .arguments[k] = ${arguments[k]}');
+        // FIXME: for now reasonably expected to be Expression, never anything else (no if element, spread element)
+        var value = getUltimateNonIdentifierExpression(
+            reporter,
+            returnStatements,
+            assignmentExpressionsByElementId,
+            variableDeclarationsByElementId,
+            arguments[k] as Expression,
+            null,
+            diagnosticMessageNode);
+        addLintMessage(
+            reporter,
+            diagnosticMessageNode ?? expression ?? expression2!,
+            msgDebugMode
+                ? errors.ErrorSeverity.ERROR
+                : errors.ErrorSeverity.INFO,
+            'compareValueFromUltimateExpressionWithAnotherUltimateValue() calls hasInstanceCreationLikeExpressionAny\$() part InstanceCreationExpression() second \$() #0.1.4.1 value = $value value?.staticType = ${value?.staticType}, value.constructorName.name?.name = ${value is InstanceCreationExpression ? value.constructorName.name?.name : 'value is not an InstanceCreationExpression so has no \$ name,'} value?.staticType?.getDisplayString() == ${value?.staticType?.getDisplayString()}');
+
+        if (value is InstanceCreationExpression &&
+            value.staticType != null &&
+            (value.staticType?.getDisplayString() == '\$' ||
+                value.staticType?.getDisplayString().indexOf('\$<') == 0)) {
+          addLintMessage(
+              reporter,
+              diagnosticMessageNode ?? expression ?? expression2!,
+              msgDebugMode
+                  ? errors.ErrorSeverity.ERROR
+                  : errors.ErrorSeverity.INFO,
+              'compareValueFromUltimateExpressionWithAnotherUltimateValue() calls hasInstanceCreationLikeExpressionAny\$() part InstanceCreationExpression() second \$() #0.1.5 key or value is \$() instance creation');
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /// Warning! this method can't be called with $M() or $N() and of this exact purposed instances only non-functional expressions.
+  /// Compares only a declared variable that had only one value assignment - on declaration or later. If expression(/2) is Identifier() and it returns more than one assignement expressions on calling getComparableValueFromExpressionOrDartObject (yskrn from declaration and/or from possible many assigments) a lint error is shown, but the code smoothly works and doesn't throw Exception.
+  /// This means it is ensure that two values compared have no more that one value assignment so the value can be treated as const/final.
+  /// Because of this if compareOneTimeAssignmentExpression == false all assignments are used for comparison from more than one element "expressions" sources (one expressions may be one assignment second many assignments or both can be many assignments)
+  /// if one comparison fails - error is reported and false is returned
+  /// It means on declaration (initializer expression), or on first assignment some time after declaration but with no second or more declarations.
+  /// This is necessary to ensure the const/final like nature of the assignment - not neccessary const but you know the value is certain (in standard dart for a method call you can't use the value of the variable that was declared but not initialized with value).
+  /// returns true if two computable values are equal like 2.8 == 2.8 or false otherwise.
+  /// Warning: is it needed?: returns null if:
+  /// 1. an expression is not handled
+  /// 2. couldn't find two expressions of the same sort - we can compare two [DartObject]s but no one DartObject and one Expression,
+  /// [Edit:] update, currently value for input DartObject returns f.e. DartObject, and expression/s with declaration and all assignments and if you require only one assignment on declaration or later then pass to this method compareOneTimeAssignmentExpression = true;
+  /// 3. Possibly (may not be implemented yet) if a difficult expression like function doesn't produce non-null ExecutableElement (like FunctionElement) .staticElement which i guest may mean that any return type or expression was not computable.
+  ///    to remind me: also DartObject .toFunctionValue() produces ExecutableElement - with casting or now to function or method element it might be compared too with ==
+  bool? compareValueFromUltimateExpressionWithAnotherUltimateValue(
+      ErrorReporter reporter,
+      Map<dynamic, List<ReturnStatement>> returnStatements,
+      Map<int, List<AssignmentExpression>> assignmentExpressionsByElementId,
+      Map<int, List<VariableDeclaration>> variableDeclarationsByElementId,
+      {Expression? expression,
+      DartObject? dartObjectParam,
+      bool expressionMustBeConst = true,
+      Expression? expression2,
+      DartObject? dartObjectParam2,
+      // if dartObjectParam2 is supplied (but no expression2):
+      DartObject? dartObjectParam2SupportForExpression2,
+      // if expression2 is supplied (but no dartObjectParam2):
+      Expression? expressionParam2SupportFordartObjectParam2,
+      Object? diagnosticMessageNode,
+      bool expression2MustBeConst2 = true,
+      // If present, to match conditions the expression param must represent simple value and [String] in this case and dartObjectParam2 which is "sort-of" staticly created $R "instance" is not null (not necessary to use expression2) and expression is checked if it matches the regexp
+      bool isRegExp = false,
+      // If present, If present, to match conditions the expression param must represent simple value and [num] in this case and dartObjectParam2 which is "sort-of" staticly created $B "instance" is not null (not necessary to use expression2) and expression is checked if it matches the $R range object values and other settings.
+      bool isBetween = false,
+      required MethodDeclaration methodDeclaration}) {
+    if (expression != null ||
+        expression2 != null ||
+        diagnosticMessageNode != null) {
+      addLintMessage(
+          reporter,
+          diagnosticMessageNode ?? expression ?? expression2!,
+          msgDebugMode
+              ? errors.ErrorSeverity.ERROR
+              : errors.ErrorSeverity.WARNING,
+          'compareValueFromUltimateExpressionWithAnotherUltimateValue(), WE ENTERED THIS TERRIBLE METHOD !');
+    }
+    if (expression == null &&
+        dartObjectParam == null &&
+        (diagnosticMessageNode != null || expression2 != null)) {
+      addLintMessage(
+          reporter,
+          diagnosticMessageNode ?? expression2!,
+          errors.ErrorSeverity.ERROR,
+          'compareValueFromUltimateExpressionWithAnotherUltimateValue() Error: Can\'t both expression and dartObjectParam be null');
+    }
+    if (expression2 == null &&
+        dartObjectParam2 == null &&
+        (diagnosticMessageNode != null || expression != null)) {
+      addLintMessage(
+          reporter,
+          diagnosticMessageNode ?? expression!,
+          errors.ErrorSeverity.ERROR,
+          'compareValueFromUltimateExpressionWithAnotherUltimateValue() Error: Can\'t both expression2 and dartObjectParam2 be null');
+    }
+
+    // ??? We need to provide two ultimate objects ready to be compared whatever they might be.
+    // If in the following a key 1: or 2: will could'nt has been found an expression for a given key couldn't for now a way to translated into something easy to compare has been found.
+    // now in theory we can compare values starting from easy ones.
+    var value = getComparableValueFromExpressionOrDartObject(
+        reporter,
+        returnStatements,
+        assignmentExpressionsByElementId,
+        variableDeclarationsByElementId,
+        expression,
+        dartObjectParam,
+        diagnosticMessageNode ?? expression ?? expression2);
+    var value2 = getComparableValueFromExpressionOrDartObject(
+        reporter,
+        returnStatements,
+        assignmentExpressionsByElementId,
+        variableDeclarationsByElementId,
+        expression2,
+        dartObjectParam2,
+        diagnosticMessageNode ?? expression ?? expression2);
+
+    ({
+      Map<ComparableUltimateValue, Object?>? value,
+      bool valueHasBeenFound
+    })? value2SupportFordartObjectParam2;
+    if (expressionParam2SupportFordartObjectParam2 != null) {
+      value2SupportFordartObjectParam2 =
+          getComparableValueFromExpressionOrDartObject(
+              reporter,
+              returnStatements,
+              assignmentExpressionsByElementId,
+              variableDeclarationsByElementId,
+              expressionParam2SupportFordartObjectParam2,
+              null,
+              diagnosticMessageNode ?? expression ?? expression2);
+    }
+
+    // Normally if two compared params of this method are DartObject the best is to compare them
+    // but if the second param contain expression of a List, Set, Map, Record, class's constructor call (forgot something?),
+    // then also if in a param like element we find at least one $() instance call, f.e. [1, $(double), 4], abc(1, $(List)),
+    // then no DartObject but Expression must be used and for any $() param-like element the corresponding element from
+    // the first expression will be matched against the element from the second expression like normal @$() annotation.
+    bool value2HasInstanceCreationLikeExpressionAny$Param = false;
+
+    if (value2.value?[ComparableUltimateValue.expression] is Expression ||
+        (value2SupportFordartObjectParam2 != null &&
+            value2SupportFordartObjectParam2
+                .value?[ComparableUltimateValue.expression] is Expression)) {
+      addLintMessage(
+          reporter,
+          diagnosticMessageNode ?? expression ?? expression2!,
+          msgDebugMode ? errors.ErrorSeverity.ERROR : errors.ErrorSeverity.INFO,
+          'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() second \$() #0.1 ');
+      value2HasInstanceCreationLikeExpressionAny$Param =
+          hasInstanceCreationLikeExpressionAny$Param(
+        reporter,
+        returnStatements,
+        assignmentExpressionsByElementId,
+        variableDeclarationsByElementId,
+        value2SupportFordartObjectParam2 != null
+            ? value2SupportFordartObjectParam2
+                .value![ComparableUltimateValue.expression] as Expression
+            : value2.value![ComparableUltimateValue.expression] as Expression,
+        expression2,
+        diagnosticMessageNode,
+      );
+    }
+
+    if (expression != null ||
+        expression2 != null ||
+        diagnosticMessageNode != null) {
+      addLintMessage(
+          reporter,
+          diagnosticMessageNode ?? expression ?? expression2!,
+          msgDebugMode ? errors.ErrorSeverity.ERROR : errors.ErrorSeverity.INFO,
+          '''compareValueFromUltimateExpressionWithAnotherUltimateValue(), we have the following info about compared values:
+            expression = ${expression?.toSource()},
+            expression?.staticType = ${expression?.staticType}
+            expression.runtimeType = ${expression.runtimeType}
+            dartObjectParam = $dartObjectParam,
+            value = ${value},
+            dartObjectParam.variable = ${dartObjectParam?.variable}
+            expression2 = ${expression2?.toSource()},
+            dartObjectParam2SupportForExpression2 = $dartObjectParam2SupportForExpression2
+            expression2?.staticType = ${expression2?.staticType}
+            expression2.runtimeType = ${expression2.runtimeType}
+            dartObjectParam2 = $dartObjectParam2
+            dartObjectParam2.variable = ${dartObjectParam2?.variable}
+            value2 = ${value2}
+            is value2 to be replaced by a value of value2HasInstanceCreationLikeExpressionAny\$Param = ${(expressionParam2SupportFordartObjectParam2 != null && value2HasInstanceCreationLikeExpressionAny$Param || (expression != null && dartObjectParam == null && expression2 == null && expressionParam2SupportFordartObjectParam2 != null))}
+            expressionParam2SupportFordartObjectParam2 = $expressionParam2SupportFordartObjectParam2
+            value2SupportFordartObjectParam2 = $value2SupportFordartObjectParam2
+            value2HasInstanceCreationLikeExpressionAny\$Param = ${value2HasInstanceCreationLikeExpressionAny$Param}
+        ''');
+    }
+
+    if (expressionParam2SupportFordartObjectParam2 != null &&
+            value2HasInstanceCreationLikeExpressionAny$Param ||
+        (expression != null &&
+            dartObjectParam == null &&
+            expression2 == null &&
+            expressionParam2SupportFordartObjectParam2 != null)) {
+      value2 = value2SupportFordartObjectParam2!;
+    }
+
+    if (value.valueHasBeenFound &&
+            (value2.valueHasBeenFound ||
+                (!value2.valueHasBeenFound && (isRegExp || isBetween)))
+        // FIXME: WHILE FOR value2.isValueTakenFromLiteral producing DartObject, etc. this is reliable as i tested to some degree...
+        // BUT FOR OBJECT PRODUCED FROM LITERALS value.isValueTakenFromLiteral = false (NOT NULL!!!) it is yet to be tested and doubtfull it will work unfailingly
+        ) {
+      if ((isRegExp || isBetween) &&
+          value.value?.keys.contains(ComparableUltimateValue.simple) == true) {
+        if (isBetween) {
+          // final num t1; // left limit value
+          // final num t2; // right limit value
+          // final bool t3; // must be int-like (may be type double but integer - to enforce can't be double use f.e. @$(num $B(...) $NOT double))
+          // final bool t4; // includes left limit value
+          // final bool t5; // includes right limit value
+          num leftLimitValue =
+              dartObjectParam2!.getField('t1')!.toDoubleValue() ??
+                  dartObjectParam2.getField('t1')!.toIntValue()!;
+          num rightLimitValue =
+              dartObjectParam2.getField('t2')!.toDoubleValue() ??
+                  dartObjectParam2.getField('t2')!.toIntValue()!;
+
+          if (leftLimitValue >= rightLimitValue) {
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                errors.ErrorSeverity.ERROR,
+                'compareValueFromUltimateExpressionWithAnotherUltimateValue() error, Range error left Limit/hand Value is greater or equal to right limit/hand Value, error while checking if a simple number taken from expression is between range @\$(... \$B(1, 10, ...))');
+            return null;
+          }
+          bool mustBeInt = dartObjectParam2.getField('t3')!.toBoolValue()!;
+          bool includesLeftLimitValue =
+              dartObjectParam2.getField('t4')!.toBoolValue()!;
+          bool includesRightLimitValue =
+              dartObjectParam2.getField('t5')!.toBoolValue()!;
+          // if null, not a number, may be double type with int value:
+          num? number = value.value![ComparableUltimateValue.simple] is num
+              ? value.value![ComparableUltimateValue.simple] as num
+              : null;
+
+          if (number == null) {
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                errors.ErrorSeverity.ERROR,
+                'compareValueFromUltimateExpressionWithAnotherUltimateValue() error, number is null, error while checking if a simple number taken from expression is between range @\$(... \$B(1, 10, ...))');
+            return null;
+          }
+          bool isIntValue = number == number.roundToDouble() ? true : false;
+          addLintMessage(
+              reporter,
+              diagnosticMessageNode ?? expression ?? expression2!,
+              msgDebugMode
+                  ? errors.ErrorSeverity.ERROR
+                  : errors.ErrorSeverity.INFO,
+              'compareValueFromUltimateExpressionWithAnotherUltimateValue() isBetween = true, leftLimitValue = $leftLimitValue, rightLimitValue = $rightLimitValue, mustBeInt = $mustBeInt, includesLeftLimitValue = $includesLeftLimitValue, includesRightLimitValue = $includesRightLimitValue, isIntValue = $isIntValue, mustBeInt && !isIntValue = ${mustBeInt && !isIntValue} ');
+          if (mustBeInt && !isIntValue) {
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                errors.ErrorSeverity.ERROR,
+                'compareValueFromUltimateExpressionWithAnotherUltimateValue() error, \$B() settings require that number taken from expression (simple value) can be of type double but must have int value, error while checking if a simple number taken from expression is between range @\$(... \$B(1, 10, ...))');
+            return null;
+          }
+          return number > leftLimitValue && number < rightLimitValue ||
+              includesLeftLimitValue && number == leftLimitValue ||
+              includesRightLimitValue && number == rightLimitValue;
+        } else if (isRegExp) {
+          // final String t1; // source
+          // final bool t2; // multiline
+          // final bool t3; // case sensitive
+          // final bool t4; // unicode
+          // final bool t5; // isdotall
+
+          String regexString =
+              dartObjectParam2!.getField('t1')!.toStringValue()!;
+          bool isMultiline = dartObjectParam2.getField('t2')!.toBoolValue()!;
+          bool isCaseSensitive =
+              dartObjectParam2.getField('t3')!.toBoolValue()!;
+          bool isUnicode = dartObjectParam2.getField('t4')!.toBoolValue()!;
+          bool isDotAll = dartObjectParam2.getField('t5')!.toBoolValue()!;
+          String? string =
+              value.value![ComparableUltimateValue.simple] is String
+                  ? value.value![ComparableUltimateValue.simple] as String
+                  : null;
+          if (string == null) {
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                errors.ErrorSeverity.ERROR,
+                'compareValueFromUltimateExpressionWithAnotherUltimateValue() error, string is null, error while checking if a string taken from expression matches RegExp conditions stipulated in the @\$(... \$R()...) instance');
+          }
+          RegExp regex = RegExp(regexString,
+              multiLine: isMultiline,
+              caseSensitive: isCaseSensitive,
+              unicode: isUnicode,
+              dotAll: isDotAll);
+          return regex.hasMatch(string!);
+        }
+      } else if (value.value?.keys.contains(ComparableUltimateValue.simple) ==
+              true &&
+          value2.value?.keys.contains(ComparableUltimateValue.simple) == true) {
+        addLintMessage(
+            reporter,
+            diagnosticMessageNode ?? expression ?? expression2!,
+            msgDebugMode
+                ? errors.ErrorSeverity.ERROR
+                : errors.ErrorSeverity.INFO,
+            'compareValueFromUltimateExpressionWithAnotherUltimateValue() Comparing two simple values value.value is null ${value.value == null} value2.value is null ${value2.value == null} ,value.value![ComparableUltimateValue.simple] == value2.value![ComparableUltimateValue.simple] it is: ${value.value?[ComparableUltimateValue.simple] == value2.value?[ComparableUltimateValue.simple]}');
+        return value.value![ComparableUltimateValue.simple] ==
+            value2.value![ComparableUltimateValue.simple];
+      } else if (!value2HasInstanceCreationLikeExpressionAny$Param &&
+          value.value?.keys.contains(ComparableUltimateValue.dartObject) ==
+              true &&
+          value2.value?.keys.contains(ComparableUltimateValue.dartObject) ==
+              true) {
+        return value.value![ComparableUltimateValue.dartObject] ==
+            value2.value![ComparableUltimateValue.dartObject];
+      } else if (value.value?.keys
+                  .contains(ComparableUltimateValue.expression) ==
+              true &&
+          value2.value?.keys.contains(ComparableUltimateValue.expression) ==
+              true) {
+        // DartObject docs: Returns a representation of the value of this variable, forcing the value to be computed if it had not previously been computed, or null if either this variable was not declared with the 'const' modifier or if the value of this variable could not be computed because of errors.
+        // !!! so computeConstantValue doesn't argument doesn't have to be const but the last assignment of the value must be computable
+
+        Expression? expressionF =
+            value.value?[ComparableUltimateValue.expression] as Expression?;
+        Expression? expressionF2 =
+            value2.value?[ComparableUltimateValue.expression] as Expression?;
+        // FIXME: NOT fixme just read this:
+        // why is dartObject needed? it is needed only when instance like exression has any $() instance expression as param f.e. @$(abc($(......))) or abc([$(.......), 2])
+        // so the dartObjectF2 must not be null when there is the inside/second param $(.......) constructor call.
+        DartObject? dartObjectF2;
+        try {
+          dartObjectF2 =
+              dartObjectParam2 ?? // some following conditions are a bit unnecessary
+                  (expressionParam2SupportFordartObjectParam2 != null &&
+                          value2HasInstanceCreationLikeExpressionAny$Param
+                      ? dartObjectParam2
+                      : dartObjectParam2SupportForExpression2 ??
+                          value2.value?[ComparableUltimateValue.dartObject]
+                              as DartObject?) as DartObject;
+        } catch (e, stackTrace) {
+          addLintMessage(
+              reporter,
+              diagnosticMessageNode ?? expression ?? expression2!,
+              msgDebugMode
+                  ? errors.ErrorSeverity.ERROR
+                  : errors.ErrorSeverity.INFO,
+              '''compareValueFromUltimateExpressionWithAnotherUltimateValue() catched diagnostic error, it won't be rethrown and no related return call.  - : Couldn\'t have obtained a dartObjectF2 for the second expression param expression2 (by convention rule the param is related annotation constructor @\$(param, param) param inside the annotation),
+              expressionParam2SupportFordartObjectParam2 == $expressionParam2SupportFordartObjectParam2,
+              value2HasInstanceCreationLikeExpressionAny\$Param = ${value2HasInstanceCreationLikeExpressionAny$Param}
+              expressionParam2SupportFordartObjectParam2 != null && value2HasInstanceCreationLikeExpressionAny\$Param == ${expressionParam2SupportFordartObjectParam2 != null && value2HasInstanceCreationLikeExpressionAny$Param}
+              dartObjectParam2 == $dartObjectParam2,
+              dartObjectParam2SupportForExpression2 == $dartObjectParam2SupportForExpression2,
+              value2.value?[ComparableUltimateValue.dartObject] == ${value2.value?[ComparableUltimateValue.dartObject]}
+              error messagge = $e, stackTrace = $stackTrace''');
+        }
+
+        if (value2HasInstanceCreationLikeExpressionAny$Param &&
+            dartObjectF2 == null) {
+          // FIXME: DON'T REMEMBER IF WE NEED TO FORCE IT TO BE NOT NULL, BUT THE METHOD WAS MUCH CHANGED TO WORK WITH ACCOMPANYING DARTOBJECT OR EXPRESSION FOR expression2 and dartObject2 method params
+          addLintMessage(
+              reporter,
+              diagnosticMessageNode ?? expression ?? expression2!,
+              errors.ErrorSeverity.ERROR,
+              '''compareValueFromUltimateExpressionWithAnotherUltimateValue() error: dartObjectF2 == null and there is instance like exression has any \$() instance expression as param f.e. @\$(abc(\$(......))) or abc([\$(.......), 2]) - at this stage we expect it not to be null - see comments around the place in the code. the condition causing this error is value2HasInstanceCreationLikeExpressionAny\$Param&&dartObjectF2 == null and it produces true''');
+          return null;
+        }
+
+        List<bool?> checkingReturnTypesAndValuesSubCalls = [];
+
+        if (expressionF is InstanceCreationExpression &&
+            expressionF2 is InstanceCreationExpression) {
+          // Now we could compare parameters of both and know if they are equal.
+
+          // FIXME: Read not perfectly clear desc of .isConst and expressionF.inConstantContext
+          // for now based on an assumption simply that .isConst guaratees calling const constructor anyway.
+          if ((expressionMustBeConst && !expressionF.isConst) ||
+              (expression2MustBeConst2 && !expressionF2.isConst)) {
+            // TODO: FIXME:
+            // TODO: FIXME:
+            // TODO: FIXME:
+            // JUST TO DO :) for constructor invokations add special instance $MUTABLE() (or default is mutable and add $CONST() instead) (maybe $STATE) where a constructor invokation (expression or variable) or variable doesn't have to be const internally but one (min and max at the same time) known assignment is required as it already is. Which means a constructor expression declared with the same constructor params that can be changed or not internally.
+            // then no const is required and is ignored
+            // below:
+            // not an error message - just doesn't much requirements
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
+                '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() error: at least one expression must be const but isn't expressionMustBeConst == ${expressionMustBeConst} expression2MustBeConst2 == ${expression2MustBeConst2}, at least one constructor of constructor invokation is not const constructor. Some const info: expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}               
+                    expressionF.constructorName.staticElement?.isConst == ${expressionF.constructorName.staticElement?.isConst}    
+                    expressionF.constructorName.staticElement?.declaration.isConst = ${expressionF.constructorName.staticElement?.declaration.isConst}
+                    expressionF2.constructorName.staticElement?.isConst == ${expressionF2.constructorName.staticElement?.isConst}    
+                    expressionF2.constructorName.staticElement?.declaration.isConst = ${expressionF2.constructorName.staticElement?.declaration.isConst}
+                    ''');
+            return null;
+          } else if (expressionF.constructorName.name !=
+              expressionF2.constructorName.name) {
+            // NOT AN ERROR/SYNTAX ERROR, BUT RETURNS NULL
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
+                'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() two compared constructor name do not mach: expressionF.constructorName.name == ${expressionF.constructorName.name}, expressionF2.constructorName.name == ${expressionF2.constructorName.name} ');
+            return null;
+          }
+
+          ConstructorElement? constructorDeclaration =
+              expressionF.constructorName.staticElement?.declaration;
+
+          bool isConstConstructor = true;
+          //if (expressionF.argumentList.arguments.length != 0) {
+          //  constructorDeclaration = expressionF.argumentList.arguments.first
+          //      .staticParameterElement?.declaration.enclosingElement;
+          //} else if (expressionF2.argumentList.arguments.length != 0) {
+          //  constructorDeclaration = expressionF2.argumentList.arguments.first
+          //      .staticParameterElement?.declaration.enclosingElement;
+          //}
+          //if (constructorDeclaration != null) {
+          //  if (constructorDeclaration is! ConstructorDeclaration) {
+          //    addLintMessage(
+          //        reporter,
+          //        diagnosticMessageNode ?? expression ?? expression2!,
+          //        msgDebugMode
+          //            ? errors.ErrorSeverity.ERROR
+          //            : errors.ErrorSeverity.INFO,
+          //        'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G4 ');
+          //    constructorDeclaration =
+          //        constructorDeclaration.enclosingElement;
+          //    if (constructorDeclaration is! ConstructorDeclaration) {
+          //      addLintMessage(
+          //          reporter,
+          //          diagnosticMessageNode ?? expression ?? expression2!,
+          //          msgDebugMode
+          //              ? errors.ErrorSeverity.ERROR
+          //              : errors.ErrorSeverity.INFO,
+          //          'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G5 ');
+          //      constructorDeclaration =
+          //          constructorDeclaration?.enclosingElement;
+          //    }
+          //    if (constructorDeclaration is ConstructorDeclaration) {
+          //      addLintMessage(
+          //          reporter,
+          //          diagnosticMessageNode ?? expression ?? expression2!,
+          //          msgDebugMode
+          //              ? errors.ErrorSeverity.ERROR
+          //              : errors.ErrorSeverity.INFO,
+          //          'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G6 ');
+          //      isConstConstructor =
+          //          (constructorDeclaration as ConstructorDeclaration)
+          //                  .constKeyword !=
+          //              null;
+          //    }
+          //  }
+          //}
+          if (!isConstConstructor) {
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                errors.ErrorSeverity.ERROR,
+                'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() Error: isConstConstructor == false');
+          }
+          List<ParameterElement?>? declarationParameterElements;
+          if (constructorDeclaration is ConstructorElement) {
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
+                'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G7 ');
+            declarationParameterElements =
+                (constructorDeclaration as ConstructorElement).parameters;
+            if (declarationParameterElements == null) {
+              // probably a syntax like error should never happen or analyser problem that shouldn't occur
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  errors.ErrorSeverity.ERROR,
+                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() #G8 part InstanceCreationExpression() Error: This is unexpected for the declarationParameterElements to be null not a List<ParameterElement?>');
+              return null;
+            }
+          } else {
+            // probably a syntax like error should never happen or analyser problem that shouldn't occur
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                errors.ErrorSeverity.ERROR,
+                'compareValueFromUltimateExpressionWithAnotherUltimateValue() #G9 part InstanceCreationExpression() Error: constructorDeclaration is! ConstructorDeclaration');
+            return null;
+          }
+
+          // declaration
+
+          //({
+          //    List<Expression> expressions,
+          //    bool wasThereAnyEmptyReturnStatement,
+          //    bool wasThereAnyEmptyFunctionBody,
+          //  })? getUltimateConstLikeExpressions(
+          var thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues = false;
+          if (declarationParameterElements != null) {
+            for (int i = 0; i < declarationParameterElements.length; i++) {
+              String name = declarationParameterElements[i]!.name;
+              Expression? expressionFCorrespondingParam;
+              Expression? expressionF2CorrespondingParam2;
+              DartObject? dartObjectF2CorrespondingParam2;
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G71 declarationParameterElements[i]!.name = ${declarationParameterElements[i]!.name}, declarationParameterElements[i]!.name = ${declarationParameterElements[i]!.name}, ${declarationParameterElements[i]!.displayName}, ${declarationParameterElements[i]!.getDisplayString()}, ${declarationParameterElements[i]!.declaration.name}, ${declarationParameterElements[i]!.declaration.displayName}, expressionF.argumentList.arguments.length = ${expressionF.argumentList.arguments.length} expressionF2.argumentList.arguments.length = ${expressionF2.argumentList.arguments.length}');
+
+              for (int k = 0;
+                  k < expressionF.argumentList.arguments.length;
+                  k++) {
+                if (name ==
+                    expressionF.argumentList.arguments[k].staticParameterElement
+                        ?.name) {
+                  //addLintMessage(
+                  //    reporter,
+                  //    diagnosticMessageNode ?? expression ?? expression2!,
+                  //    msgDebugMode
+                  //        ? errors.ErrorSeverity.ERROR
+                  //        : errors.ErrorSeverity.INFO,
+                  //    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G72 expressionF.argumentList.arguments[k].staticParameterElement?.declaration.name = ${expressionF.argumentList.arguments[k].staticParameterElement?.declaration.name} expressionF.argumentList.arguments[k].staticParameterElement?.name = ${expressionF.argumentList.arguments[k].staticParameterElement?.name} expressionF.argumentList.arguments[k].unParenthesized = ${expressionF.argumentList.arguments[k].unParenthesized}, expressionF.argumentList.arguments[k] = ${expressionF.argumentList.arguments[k]}');
+                  expressionFCorrespondingParam =
+                      expressionF.argumentList.arguments[k].unParenthesized;
+                }
+              }
+              for (int k = 0;
+                  k < expressionF2.argumentList.arguments.length;
+                  k++) {
+                //addLintMessage(
+                //    reporter,
+                //    diagnosticMessageNode ?? expression ?? expression2!,
+                //    msgDebugMode
+                //        ? errors.ErrorSeverity.ERROR
+                //        : errors.ErrorSeverity.INFO,
+                //    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G73 expressionF2.argumentList.arguments[k].staticParameterElement?.declaration.name = ${expressionF2.argumentList.arguments[k].staticParameterElement?.declaration.name} expressionF2.argumentList.arguments[k].staticParameterElement?.name = ${expressionF2.argumentList.arguments[k].staticParameterElement?.name} expressionF2.argumentList.arguments[k].unParenthesized = ${expressionF2.argumentList.arguments[k].unParenthesized}, expressionF2.argumentList.arguments[k] = ${expressionF2.argumentList.arguments[k]}');
+                if (name ==
+                    expressionF2.argumentList.arguments[k]
+                        .staticParameterElement?.name) {
+                  expressionF2CorrespondingParam2 =
+                      getUltimateNonIdentifierExpression(
+                    reporter,
+                    returnStatements,
+                    assignmentExpressionsByElementId,
+                    variableDeclarationsByElementId,
+                    expressionF2.argumentList.arguments[k].unParenthesized,
+                    expression2,
+                    diagnosticMessageNode,
+                  );
+                }
+              }
+
+              if (expressionFCorrespondingParam == null &&
+                  expressionF2CorrespondingParam2 == null) {
+                continue;
+              } else if (expressionFCorrespondingParam != null &&
+                      expressionF2CorrespondingParam2 == null ||
+                  expressionFCorrespondingParam == null &&
+                      expressionF2CorrespondingParam2 != null) {
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() info returning false: at least one expression to be compared was null but the other not null, so the top level values are not equal. expressionFCorrespondingParam = ${expressionFCorrespondingParam}, expressionF2CorrespondingParam2 = $expressionF2CorrespondingParam2');
+                return false;
+              }
+
+              // FIXME: For the DartObject when it is a class instance (much easier with List, Map, Set, Record)
+              // we don't have acces to constructor argument list so
+              // we need to require that if there is any given argument to the constructor:
+              // it must be initialized in the paranthesis (...) not anywhere after abc(): not here {constructor body}
+              // the constructor param must have a corresponding property with the same name and take value directly from the constructor.
+              // cannot have default value.
+              // NOTE! Because in the past i couldn't reliably have taken from DartObject proper corresponding expression (in this case instance creation object with params)
+              // then i don't have to try to get one.
+              // The FIXME: is that i must implement it but it can be done later - before that anybody need to remember when using it during the development mode.
+              if (dartObjectF2 != null) {
+                dartObjectF2CorrespondingParam2 = dartObjectF2.getField(name);
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() second \$() #1 dartObjectF2CorrespondingParam2 = $dartObjectF2CorrespondingParam2');
+              }
+
+              //  var value1111 = getUltimateNonIdentifierExpression(
+              //    reporter,
+              //    returnStatements,
+              //    assignmentExpressionsByElementId,
+              //    variableDeclarationsByElementId,
+              //    arguments[k] as Expression,
+              //    null,
+              //    diagnosticMessageNode
+              //  );
+
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() second \$() #1.15 
+                        dartObjectF2CorrespondingParam2 = $dartObjectF2CorrespondingParam2, 
+                        expressionF2CorrespondingParam2 is InstanceCreationExpression == ${expressionF2CorrespondingParam2 is InstanceCreationExpression}, 
+                        is \$() instance: ${expressionF2CorrespondingParam2 != null && expressionF2CorrespondingParam2.staticType != null && (expressionF2CorrespondingParam2.staticType?.getDisplayString() == '\$' || expressionF2CorrespondingParam2.staticType?.getDisplayString().indexOf('\$<') == 0)}
+                  ''');
+
+              if (expressionF2CorrespondingParam2
+                      is InstanceCreationExpression &&
+                  expressionF2CorrespondingParam2.staticType != null &&
+                  (expressionF2CorrespondingParam2.staticType
+                              ?.getDisplayString() ==
+                          '\$' ||
+                      expressionF2CorrespondingParam2.staticType
+                              ?.getDisplayString()
+                              .indexOf('\$<') ==
+                          0)) {
+                if (dartObjectF2CorrespondingParam2 == null) {
+                  // for now it is considered syntax error because field of name (variable/pointer name here) must be initialized like this abc(this.name) with no default value -
+                  // - problem exists only for constructors not list/Map/Set/Record literals
+                  // and because dartObjectF2.getField(name) is missing a class inspected now wasn't properly constructed.
+                  addLintMessage(
+                      reporter,
+                      diagnosticMessageNode ?? expression ?? expression2!,
+                      errors.ErrorSeverity.ERROR,
+                      'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() Error: dartObjectF2CorrespondingParam2==null and at this stage it must be DartObject See FIXME: / todo info comments when the producing of this message occurs in the code.                   // for now it is considered syntax error because field of name (variable/pointer name here) must be initialized like this abc(this.name) with no default value - only for constructors not list literals // and because dartObjectF2.getField(name) is missing a class inspected now wasn\'t properly constructed.');
+                  return null;
+                }
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() second \$() #2 ');
+                Expando<Identifier> topLevelIdentifiersProducingExpressions =
+                    Expando<Identifier>();
+                var expressionFCorrespondingParamSubExpressions =
+                    // it is not used anywhere - conditions - return fields of records  bool wasThereAnyEmptyFunctionBody, bool wasThereAnyEmptyReturnStatement}
+                    getUltimateNonConditionalNorSwitchExpressions(
+                        reporter,
+                        returnStatements,
+                        variableDeclarationsByElementId,
+                        assignmentExpressionsByElementId,
+                        expressionFCorrespondingParam!,
+                        topLevelIdentifiersProducingExpressions);
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() second \$() #2.1 expressionFCorrespondingParamSubExpressions.expressions = ${expressionFCorrespondingParamSubExpressions.expressions}, to be called with dartObjectF2CorrespondingParam2 = $dartObjectF2CorrespondingParam2, expressionF2CorrespondingParam2 = $expressionF2CorrespondingParam2, topLevelIdentifiersProducingExpressions = $topLevelIdentifiersProducingExpressions');
+
+                thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues = true;
+
+                checkingReturnTypesAndValuesSubCalls
+                    .add(checkingReturnTypesAndValues(
+                        reporter,
+                        returnStatements,
+                        assignmentExpressionsByElementId,
+                        variableDeclarationsByElementId,
+                        methodDeclaration,
+                        expressionFCorrespondingParamSubExpressions.expressions,
+                        topLevelIdentifiersProducingExpressions,
+                        // for nested calls:
+                        dartObjectF2CorrespondingParam2,
+                        expressionF2CorrespondingParam2));
+              } else {
+                bool? comparisonResult =
+                    compareValueFromUltimateExpressionWithAnotherUltimateValue(
+                        reporter,
+                        returnStatements,
+                        assignmentExpressionsByElementId,
+                        variableDeclarationsByElementId,
+                        expression: expressionFCorrespondingParam,
+                        expressionMustBeConst: expressionMustBeConst,
+                        expression2: expressionF2CorrespondingParam2,
+                        dartObjectParam2SupportForExpression2:
+                            dartObjectF2CorrespondingParam2,
+                        diagnosticMessageNode:
+                            diagnosticMessageNode ?? expression ?? expression2!,
+                        expression2MustBeConst2: expression2MustBeConst2,
+                        methodDeclaration: methodDeclaration);
+
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() comparisonResult = $comparisonResult of expressionFCorrespondingParam = $expressionFCorrespondingParam, expressionF2CorrespondingParam2 = $expressionF2CorrespondingParam2  ');
+
+                if (comparisonResult == null || comparisonResult == false) {
+                  addLintMessage(
+                      reporter,
+                      diagnosticMessageNode ?? expression ?? expression2!,
+                      msgDebugMode
+                          ? errors.ErrorSeverity.ERROR
+                          : errors.ErrorSeverity.INFO,
+                      'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() info: comparisonResult = ${comparisonResult} comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
+                  return comparisonResult;
+                }
+              }
+            }
+          }
+          addLintMessage(
+              reporter,
+              diagnosticMessageNode ?? expression ?? expression2!,
+              msgDebugMode
+                  ? errors.ErrorSeverity.ERROR
+                  : errors.ErrorSeverity.INFO,
+              'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() success, thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues = ${thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues}, checkingReturnTypesAndValuesSubCalls = ${checkingReturnTypesAndValuesSubCalls}, if thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues == true then this success is not full because for one or more expression InstanceCreationInvokation constructor invokation param there was another \$() instance which required a nested checkingReturnTypesAndValues which mail detect type/value error or succeed, some data: return true comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
+          return checkingReturnTypesAndValuesSubCalls.contains(false)
+              ? false
+              : checkingReturnTypesAndValuesSubCalls.contains(null)
+                  ? null
+                  : true;
+        } else if (expressionF is SetOrMapLiteral &&
+            expressionF2 is SetOrMapLiteral) {
+          if ((expressionMustBeConst && !expressionF.isConst) ||
+              (expression2MustBeConst2 && !expressionF2.isConst)) {
+            // TODO: FIXME:
+            // TODO: FIXME:
+            // TODO: FIXME:
+            // JUST TO DO :) for constructor invokations add special instance $MUTABLE() (or default is mutable and add $CONST() instead) (maybe $STATE) where a constructor invokation (expression or variable) or variable doesn't have to be const internally but one (min and max at the same time) known assignment is required as it already is. Which means a constructor expression declared with the same constructor params that can be changed or not internally.
+            // then no const is required and is ignored
+            // below
+            // not an error - just it doesn't match the requirements
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
+                '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() expressionMustBeConst == ${expressionMustBeConst} expression2MustBeConst2 == ${expression2MustBeConst2} at least one SetOrMapLiteral expression is not const. Some const info: expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}''');
+            return null;
+          }
+
+          addLintMessage(
+              reporter,
+              diagnosticMessageNode ?? expression ?? expression2!,
+              msgDebugMode
+                  ? errors.ErrorSeverity.ERROR
+                  : errors.ErrorSeverity.INFO,
+              '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() at least one SetOrMapLiteral expression is not const. Some const info: expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}''');
+          if (expressionF.isMap != expressionF2.isMap) {
+            // not an error or syntax error
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
+                '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() one of the elmeents is Map but the other is Set expressionF.isMap == ${expressionF.isMap}, expressionF2.isMap == ${expressionF2.isMap}''');
+            return null;
+          }
+          if (expressionF.elements.length != expressionF2.elements.length) {
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
+                '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() the number of elements in each list is not equal so the two ListLiterals (a class representing a least) are not equal: expressionF.elements.length == ${expressionF.elements.length} expressionF2.elements.length == ${expressionF2.elements.length}''');
+            return false;
+          }
+          Map<DartObject?, DartObject?>? map;
+          Set<DartObject?>? set;
+
+          if (expressionF2.isMap) {
+            map = dartObjectF2?.toMapValue();
+            if (value2HasInstanceCreationLikeExpressionAny$Param &&
+                map == null) {
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  errors.ErrorSeverity.ERROR,
+                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() error toMapValue() produced null - it must be a proper Map instance''');
+              return null;
+            }
+          } else {
+            set = dartObjectF2?.toSetValue();
+            if (value2HasInstanceCreationLikeExpressionAny$Param &&
+                set == null) {
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  errors.ErrorSeverity.ERROR,
+                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() error toSetValue() produced null - it must be a proper Set instance''');
+              return null;
+            }
+          }
+
+          var thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues = false;
+          for (int i = 0; i < expressionF.elements.length; i++) {
+            if ((expressionF.elements[i] is! Expression &&
+                    expressionF.elements[i] is! MapLiteralEntry) ||
+                (expressionF2.elements[i] is! Expression &&
+                    expressionF2.elements[i] is! MapLiteralEntry)) {
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  errors.ErrorSeverity.ERROR,
+                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() error: i == $i one of i element is not an of Expression nor MapLiteralEntry instance as required expressionF.elements[i] is! Expression == ${expressionF.elements[i] is! Expression}, expressionF.elements[i] is! MapLiteralEntry == ${expressionF.elements[i] is! MapLiteralEntry}, expressionF2.elements[i] is! Expression == ${expressionF2.elements[i] is! Expression}, expressionF2.elements[i] is! MapLiteralEntry == ${expressionF2.elements[i] is! MapLiteralEntry}''');
+              return null;
+            }
+
+            Expression expressionValue = expressionF.isSet
+                ? expressionF.elements[i] as Expression
+                : (expressionF.elements[i] as MapLiteralEntry).value;
+
+            Expression expression2Value = expressionF2.isSet
+                ? expressionF2.elements[i] as Expression
+                : (expressionF2.elements[i] as MapLiteralEntry).value;
+
+            expression2Value = expression2Value is Identifier
+                ? getUltimateNonIdentifierExpression(
+                      reporter,
+                      returnStatements,
+                      assignmentExpressionsByElementId,
+                      variableDeclarationsByElementId,
+                      expression2Value,
+                      expression2,
+                      diagnosticMessageNode,
+                    ) ??
+                    expression2Value
+                : expression2Value;
+
+            DartObject dartObject2Value = expressionF2.isSet
+                ? set?.elementAt(i) as DartObject
+                : map?.entries.elementAt(i).value as DartObject;
+
+            Expression? expressionKey = expressionF.isSet
+                ? null
+                : (expressionF.elements[i] as MapLiteralEntry).key;
+
+            Expression? expression2Key = expressionF2.isSet
+                ? null
+                : (expressionF2.elements[i] as MapLiteralEntry).key;
+
+            expression2Key = expression2Key is Identifier
+                ? getUltimateNonIdentifierExpression(
+                      reporter,
+                      returnStatements,
+                      assignmentExpressionsByElementId,
+                      variableDeclarationsByElementId,
+                      expression2Key,
+                      expression2,
+                      diagnosticMessageNode,
+                    ) ??
+                    expression2Key
+                : expression2Key;
+
+            DartObject? dartObject2Key = expressionF2.isSet
+                ? null
+                : map?.entries.elementAt(i).key as DartObject;
+
+            bool comparison1WasUsed = true;
+            bool comparison2WasUsed = true;
+            bool? comparisonResult;
+            if (expression2Value is InstanceCreationExpression &&
+                expression2Value.staticType != null &&
+                (expression2Value.staticType?.getDisplayString() == '\$' ||
+                    expression2Value.staticType
+                            ?.getDisplayString()
+                            .indexOf('\$<') ==
+                        0)) {
+              /// INFO: the conditions just here also handle the key for a Map
+              /// so no need to repeat addLintMessage error for the key much below, here it will return null, the code below won'nt be reached
+              if (expressionF2.isSet && set?.elementAt(i) == null) {
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    errors.ErrorSeverity.ERROR,
+                    '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() error: i == $i set!.elementAt(i) == null (is not a required DartObject instance) expressionF2.elements[i] == ${expressionF2.elements[i]}, full expressionF2 == $expressionF2''');
+                return null;
+              } else if (expressionF2.isMap &&
+                  (map?.entries.elementAt(i) == null ||
+                      map?.entries.elementAt(i).key == null ||
+                      map?.entries.elementAt(i).value == null)) {
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    errors.ErrorSeverity.ERROR,
+                    '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() error: i == $i at least one of the following three things is not a DartObject instance but null (none can be null): map!.entries.elementAt(i) == ${map!.entries.elementAt(i)}, map!.entries.elementAt(i).key == ${map!.entries.elementAt(i).key}, map!.entries.elementAt(i).value == ${map!.entries.elementAt(i).value},  expressionF2.elements[i] == ${expressionF2.elements[i]}, full expressionF2 == $expressionF2  ''');
+                return null;
+              }
+
+              comparison1WasUsed = false;
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() second \$() #2 ');
+
+              Expando<Identifier> topLevelIdentifiersProducingExpressions =
+                  Expando<Identifier>();
+              var expressionFCorrespondingParamSubExpressions =
+                  // it is not used anywhere - conditions - return fields of records  bool wasThereAnyEmptyFunctionBody, bool wasThereAnyEmptyReturnStatement}
+                  getUltimateNonConditionalNorSwitchExpressions(
+                      reporter,
+                      returnStatements,
+                      variableDeclarationsByElementId,
+                      assignmentExpressionsByElementId,
+                      expressionValue,
+                      topLevelIdentifiersProducingExpressions);
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() second \$() #2.1 expressionFCorrespondingParamSubExpressions.expressions = ${expressionFCorrespondingParamSubExpressions.expressions}, to be called with dartObject2Value = $dartObject2Value, expression2Value = $expression2Value, topLevelIdentifiersProducingExpressions = $topLevelIdentifiersProducingExpressions');
+
+              thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues = true;
+
+              checkingReturnTypesAndValuesSubCalls
+                  .add(checkingReturnTypesAndValues(
+                      reporter,
+                      returnStatements,
+                      assignmentExpressionsByElementId,
+                      variableDeclarationsByElementId,
+                      methodDeclaration,
+                      expressionFCorrespondingParamSubExpressions.expressions,
+                      topLevelIdentifiersProducingExpressions,
+                      // for nested calls:
+                      dartObject2Value,
+                      expression2Value));
+            } else {
+              comparisonResult =
+                  compareValueFromUltimateExpressionWithAnotherUltimateValue(
+                      reporter,
+                      returnStatements,
+                      assignmentExpressionsByElementId,
+                      variableDeclarationsByElementId,
+                      expression: expressionValue,
+                      expressionMustBeConst: expressionMustBeConst,
+                      expression2: expression2Value,
+                      dartObjectParam2SupportForExpression2: dartObject2Value,
+                      diagnosticMessageNode:
+                          diagnosticMessageNode ?? expression ?? expression2!,
+                      expression2MustBeConst2: expression2MustBeConst2,
+                      methodDeclaration: methodDeclaration);
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLitreal() comparisonResult (for value part) = $comparisonResult of ');
+            }
+
+            bool? comparisonResult2;
+            if (expressionF.isMap) {
+              if (expression2Key is InstanceCreationExpression &&
+                  expression2Key.staticType != null &&
+                  (expression2Key.staticType?.getDisplayString() == '\$' ||
+                      expression2Key.staticType
+                              ?.getDisplayString()
+                              .indexOf('\$<') ==
+                          0)) {
+                // READ THIS, READ THIS - at this stage dartObject2Key must be DartObject,
+                // but no need to check it here, it is done for dartObject2Value with taking key also into account.
+
+                comparison2WasUsed = false;
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() second \$() #2 ');
+
+                Expando<Identifier> topLevelIdentifiersProducingExpressions =
+                    Expando<Identifier>();
+                var expressionFCorrespondingParamSubExpressions =
+                    // it is not used anywhere - conditions - return fields of records  bool wasThereAnyEmptyFunctionBody, bool wasThereAnyEmptyReturnStatement}
+                    getUltimateNonConditionalNorSwitchExpressions(
+                        reporter,
+                        returnStatements,
+                        variableDeclarationsByElementId,
+                        assignmentExpressionsByElementId,
+                        expressionKey!,
+                        topLevelIdentifiersProducingExpressions);
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() second \$() #2.1 expressionFCorrespondingParamSubExpressions.expressions = ${expressionFCorrespondingParamSubExpressions.expressions}, to be called with dartObject2Key = $dartObject2Key, expression2Key = $expression2Key, topLevelIdentifiersProducingExpressions = $topLevelIdentifiersProducingExpressions');
+
+                thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues = true;
+
+                checkingReturnTypesAndValuesSubCalls
+                    .add(checkingReturnTypesAndValues(
+                        reporter,
+                        returnStatements,
+                        assignmentExpressionsByElementId,
+                        variableDeclarationsByElementId,
+                        methodDeclaration,
+                        expressionFCorrespondingParamSubExpressions.expressions,
+                        topLevelIdentifiersProducingExpressions,
+                        // for nested calls:
+                        dartObject2Key,
+                        expression2Key));
+              } else {
+                comparisonResult2 =
+                    compareValueFromUltimateExpressionWithAnotherUltimateValue(
+                        reporter,
+                        returnStatements,
+                        assignmentExpressionsByElementId,
+                        variableDeclarationsByElementId,
+                        expression: expressionKey,
+                        expressionMustBeConst: expressionMustBeConst,
+                        expression2: expression2Key,
+                        dartObjectParam2SupportForExpression2: dartObject2Key,
+                        diagnosticMessageNode:
+                            diagnosticMessageNode ?? expression ?? expression2!,
+                        expression2MustBeConst2: expression2MustBeConst2,
+                        methodDeclaration: methodDeclaration);
+
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() comparisonResult2 (for key part) = $comparisonResult2 ');
+              }
+            }
+
+            if ((comparison1WasUsed &&
+                    (comparisonResult == null || comparisonResult == false)) ||
+                (comparison2WasUsed &&
+                    expressionF.isMap &&
+                    (comparisonResult2 == null ||
+                        comparisonResult2 == false))) {
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() info: comparison1WasUsed (value of map) = $comparison1WasUsed, comparison2WasUsed (key of map) == $comparison2WasUsed, comparisonResult = ${comparisonResult} comparisonResult == null||comparisonResult==false Two highest level expressions (compareValueFromUltimateExpressionWithAnotherUltimateValue() params) compared: expression = ${expression}, expression2 = ${expression2}');
+              return comparisonResult == null || comparisonResult2 == null
+                  ? null
+                  : false;
+            }
+          }
+          addLintMessage(
+              reporter,
+              diagnosticMessageNode ?? expression ?? expression2!,
+              msgDebugMode
+                  ? errors.ErrorSeverity.ERROR
+                  : errors.ErrorSeverity.INFO,
+              'compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() success, thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues = ${thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues}, checkingReturnTypesAndValuesSubCalls = ${checkingReturnTypesAndValuesSubCalls}, if thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues == true then this success is not full because for one or more expression InstanceCreationInvokation constructor invokation param there was another \$() instance which required a nested checkingReturnTypesAndValues which mail detect type/value error or succeed, some data: return true comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
+          return checkingReturnTypesAndValuesSubCalls.contains(false)
+              ? false
+              : checkingReturnTypesAndValuesSubCalls.contains(null)
+                  ? null
+                  : true;
+        } else if (expressionF is ListLiteral && expressionF2 is ListLiteral) {
+          if ((expressionMustBeConst && !expressionF.isConst) ||
+              (expression2MustBeConst2 && !expressionF2.isConst)) {
+            // TODO: FIXME:
+            // TODO: FIXME:
+            // TODO: FIXME:
+            // JUST TO DO :) for constructor invokations add special instance $MUTABLE() (or default is mutable and add $CONST() instead) (maybe $STATE) where a constructor invokation (expression or variable) or variable doesn't have to be const internally but one (min and max at the same time) known assignment is required as it already is. Which means a constructor expression declared with the same constructor params that can be changed or not internally.
+            // then no const is required and is ignored
+            // below:
+            // not an error - just it doesn't match the requirements
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
+                '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() expressionMustBeConst == ${expressionMustBeConst} expression2MustBeConst2 == ${expression2MustBeConst2} at least one ListLiteral expression is not const. Some const info: expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}''');
+            return null;
+          }
+
+          addLintMessage(
+              reporter,
+              diagnosticMessageNode ?? expression ?? expression2!,
+              msgDebugMode
+                  ? errors.ErrorSeverity.ERROR
+                  : errors.ErrorSeverity.INFO,
+              '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() Some const info: expressionMustBeConst == ${expressionMustBeConst} expression2MustBeConst2 == ${expression2MustBeConst2} expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}''');
+          if (expressionF.elements.length != expressionF2.elements.length) {
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
+                '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() the number of elements in each list is not equal so the two ListLiterals (a class representing a least) are not equal: expressionF.elements.length == ${expressionF.elements.length} expressionF2.elements.length == ${expressionF2.elements.length}''');
+            return false;
+          }
+
+          List<DartObject?>? list = dartObjectF2!.toListValue();
+
+          if (value2HasInstanceCreationLikeExpressionAny$Param &&
+              list == null) {
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                errors.ErrorSeverity.ERROR,
+                '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() error toListValue() produced null - it must be a proper List instance''');
+            return null;
+          }
+
+          var thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues = false;
+          for (int i = 0; i < expressionF.elements.length; i++) {
+            if (expressionF.elements[i] is! Expression ||
+                expressionF2.elements[i] is! Expression) {
+              // later edit: can't imagine this could happen
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  errors.ErrorSeverity.ERROR,
+                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() error: i == $i at least one of CollectionElement instance is not an Expression instance expressionF.elements[i] is Expression == ${expressionF.elements[i] is Expression} expressionF2.elements[i] is Expression == ${expressionF2.elements[i] is Expression}''');
+              return null;
+            }
+
+            Expression expressionValue = expressionF.elements[i] as Expression;
+            Expression expression2Value =
+                expressionF2.elements[i] as Expression;
+            expression2Value = expression2Value is Identifier
+                ? getUltimateNonIdentifierExpression(
+                      reporter,
+                      returnStatements,
+                      assignmentExpressionsByElementId,
+                      variableDeclarationsByElementId,
+                      expression2Value,
+                      expression2,
+                      diagnosticMessageNode,
+                    ) ??
+                    expression2Value
+                : expression2Value;
+            DartObject? dartObject2Value = list?[i];
+
+            if (expression2Value is InstanceCreationExpression &&
+                expression2Value.staticType != null &&
+                (expression2Value.staticType?.getDisplayString() == '\$' ||
+                    expression2Value.staticType
+                            ?.getDisplayString()
+                            .indexOf('\$<') ==
+                        0)) {
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() second \$() #2 ');
+              if (list?[i] == null) {
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    errors.ErrorSeverity.ERROR,
+                    '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() error: i == $i list.elementAt(i) == null (is not a required DartObject instance) expressionF2.elements[i] == ${expressionF2.elements[i]}, full expressionF2 == $expressionF2''');
+                return null;
+              }
+              Expando<Identifier> topLevelIdentifiersProducingExpressions =
+                  Expando<Identifier>();
+              var expressionFCorrespondingParamSubExpressions =
+                  // it is not used anywhere - conditions - return fields of records  bool wasThereAnyEmptyFunctionBody, bool wasThereAnyEmptyReturnStatement}
+                  getUltimateNonConditionalNorSwitchExpressions(
+                      reporter,
+                      returnStatements,
+                      variableDeclarationsByElementId,
+                      assignmentExpressionsByElementId,
+                      expressionValue,
+                      topLevelIdentifiersProducingExpressions);
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() second \$() #2.1 expressionFCorrespondingParamSubExpressions.expressions = ${expressionFCorrespondingParamSubExpressions.expressions}, to be called with dartObject2Value = $dartObject2Value, expression2Value = $expression2Value, topLevelIdentifiersProducingExpressions = $topLevelIdentifiersProducingExpressions');
+
+              thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues = true;
+
+              checkingReturnTypesAndValuesSubCalls
+                  .add(checkingReturnTypesAndValues(
+                      reporter,
+                      returnStatements,
+                      assignmentExpressionsByElementId,
+                      variableDeclarationsByElementId,
+                      methodDeclaration,
+                      expressionFCorrespondingParamSubExpressions.expressions,
+                      topLevelIdentifiersProducingExpressions,
+                      // for nested calls:
+                      dartObject2Value,
+                      expression2Value));
+            } else {
+              bool? comparisonResult =
+                  compareValueFromUltimateExpressionWithAnotherUltimateValue(
+                      reporter,
+                      returnStatements,
+                      assignmentExpressionsByElementId,
+                      variableDeclarationsByElementId,
+                      expression: expressionValue,
+                      expressionMustBeConst: expressionMustBeConst,
+                      expression2: expression2Value,
+                      dartObjectParam2SupportForExpression2: dartObject2Value,
+                      diagnosticMessageNode:
+                          diagnosticMessageNode ?? expression ?? expression2!,
+                      expression2MustBeConst2: expression2MustBeConst2,
+                      methodDeclaration: methodDeclaration);
+
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() comparisonResult = $comparisonResult');
+
+              if (comparisonResult == null || comparisonResult == false) {
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() info: comparisonResult = ${comparisonResult} comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
+                return comparisonResult;
+              }
+            }
+          }
+          addLintMessage(
+              reporter,
+              diagnosticMessageNode ?? expression ?? expression2!,
+              msgDebugMode
+                  ? errors.ErrorSeverity.ERROR
+                  : errors.ErrorSeverity.INFO,
+              'compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() success, thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues = ${thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues}, checkingReturnTypesAndValuesSubCalls = ${checkingReturnTypesAndValuesSubCalls}, if thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues == true then this success is not full because for one or more expression InstanceCreationInvokation constructor invokation param there was another \$() instance which required a nested checkingReturnTypesAndValues which mail detect type/value error or succeed, some data: return true comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
+          return checkingReturnTypesAndValuesSubCalls.contains(false)
+              ? false
+              : checkingReturnTypesAndValuesSubCalls.contains(null)
+                  ? null
+                  : true;
+        } else if (expressionF is RecordLiteral &&
+            expressionF2 is RecordLiteral) {
+          // 1. RecordType (not literal Expreesion) has namedFields and Positional fields so you need to compare type of each in the == "Type" part
+          // not difficult to implement.
+          // 2. But here RecordLiteral has fields - list of expressions like list or set
+          // Supposedly for enum you don't need to do anything as i can see there is no something special for enum (there is but seems not immediately needed but useful elsewhere)
+          // then you will use InstanceCreationExpression and just type comparison enum abc {...} use abc in $(abc, abc.cde) .cde means constructor call InstanceCreationExpression
+
+          if ((expressionMustBeConst && !expressionF.isConst) ||
+              (expression2MustBeConst2 && !expressionF2.isConst)) {
+            // TODO: FIXME:
+            // TODO: FIXME:
+            // TODO: FIXME:
+            // JUST TO DO :) for constructor invokations add special instance $MUTABLE() (or default is mutable and add $CONST() instead) (maybe $STATE) where a constructor invokation (expression or variable) or variable doesn't have to be const internally but one (min and max at the same time) known assignment is required as it already is. Which means a constructor expression declared with the same constructor params that can be changed or not internally.
+            // then no const is required and is ignored
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
+                '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() expressionMustBeConst == ${expressionMustBeConst} expression2MustBeConst2 == ${expression2MustBeConst2} at least one RecordLiteral expression is not const. Some const info: expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}''');
+            return null;
+          }
+
+          addLintMessage(
+              reporter,
+              diagnosticMessageNode ?? expression ?? expression2!,
+              msgDebugMode
+                  ? errors.ErrorSeverity.ERROR
+                  : errors.ErrorSeverity.INFO,
+              '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() at least one RecordLiteral expression is not const. Some const info: expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}''');
+          if (expressionF.fields.length != expressionF2.fields.length) {
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
+                '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() the number of elements in each list is not equal so the two ListLiterals (a class representing a least) are not equal: expressionF.elements.length == ${expressionF.fields.length} expressionF2.elements.length == ${expressionF2.fields.length}''');
+            return false;
+          }
+
+          // type example, all done different way causes errors.
+          // first go positional $1, $2, then named, so then we have pattern/order of doing things for the loop below:
+          // (int? x, int y, {int? z}) point = (1, 2, z: 3);
+
+          // Oh, a bit suprised. Temporarily a solution is to have not only a dartObject carrying the Record value but also a corresponding Expression instance - precisely a RecordLiteral with a List of fields. We iterate through the fields and if field[i] is NamedExpression instance - you have a name of the expression and the expression itself. If we need a DartObject instance we do dartObject.getField((expressionF.fields[i] as NamedExpression).name.label.name), but if it is a "normal" Expression we do dartObject.getField('${i+1}')
+          var thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues = false;
+          for (int i = 0; i < expressionF.fields.length; i++) {
+            addLintMessage(
+                reporter,
+                diagnosticMessageNode ?? expression ?? expression2!,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
+                '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() what we have for i = $i, 
+                expressionF.fields[i].runtimeType == ${expressionF.fields[i].runtimeType}, expressionF.fields[i].staticType == ${expressionF.fields[i].staticType},  expressionF.fields[i].staticType?.element == ${expressionF.fields[i].staticType?.element}, expressionF.fields[i].staticType?.element.runtimeType == ${expressionF.fields[i].staticType?.element.runtimeType} expressionF.fields[i].staticType?.element?.id = ${expressionF.fields[i].staticType?.element?.id}, 
+                expressionF.fields[i] is NamedExpression = ${expressionF.fields[i] is NamedExpression}, 
+                name to be used: ${expressionF.fields[i] is NamedExpression ? (expressionF.fields[i] as NamedExpression).name.label.name : '\$${i + 1}'}
+                (dartObjectF2 == null : ${dartObjectF2 == null}) value of field for the mentioned name: ${expressionF.fields[i] is NamedExpression ? dartObjectF2?.getField((expressionF.fields[i] as NamedExpression).name.label.name) : dartObjectF2?.getField('\$${i + 1}')}
+                ''');
+            if (expressionF.fields[i] is! Expression ||
+                expressionF2.fields[i] is! Expression) {
+              // Later edit: Can't imagine a situation this could happen
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() Later edit: Can't imagine a situation this could happen at leasst one of CollectionElement instance is not an Expression instance expressionF.elements[i] is Expression == ${expressionF.fields[i] is Expression} expressionF2.elements[i] is Expression == ${expressionF2.fields[i] is Expression}''');
+              return null;
+            }
+
+            Expression expressionValue =
+                expressionF.fields[i] is NamedExpression
+                    ? (expressionF.fields[i] as NamedExpression).expression
+                    : expressionF.fields[i];
+            Expression expression2Value =
+                expressionF2.fields[i] is NamedExpression
+                    ? (expressionF2.fields[i] as NamedExpression).expression
+                    : expressionF2.fields[i];
+
+            expression2Value = expression2Value is Identifier
+                ? getUltimateNonIdentifierExpression(
+                      reporter,
+                      returnStatements,
+                      assignmentExpressionsByElementId,
+                      variableDeclarationsByElementId,
+                      expression2Value,
+                      expression2,
+                      diagnosticMessageNode,
+                    ) ??
+                    expression2Value
+                : expression2Value;
+
+            DartObject? dartObject2Value = expressionF.fields[i]
+                    is NamedExpression
+                ? dartObjectF2?.getField(
+                    (expressionF.fields[i] as NamedExpression).name.label.name)
+                : dartObjectF2?.getField('\$${i + 1}');
+
+            /*
+                expressionF.fields[i].runtimeType == NamedExpressionImpl, expressionF.fields[i].staticType == (int, int),  expressionF.fields[i].staticType?.element == null, expressionF.fields[i].staticType?.element.runtimeType == Null expressionF.fields[i].staticType?.element?.id = null, 
+                                expressionF.fields[i] is NamedExpression = true, 
+                                name to be used: b
+                                (dartObjectF2 == null : true) value of field for the mentioned name: null
+                                dart(anno_types_warning)
+                annotypes compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() dartObject2Value==null it is expected to be DartObject instance.
+            */
+
+            /*else if (dartObjectF2.getField() == null) {
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  errors.ErrorSeverity.ERROR,
+                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() error: i == $i list.elementAt(i) == null (is not a required DartObject instance) expressionF2.elements[i] == ${expressionF2.elements[i]}, full expressionF2 == $expressionF2''');
+              return null;
+            }*/
+            if (expression2Value is InstanceCreationExpression &&
+                expression2Value.staticType != null &&
+                (expression2Value.staticType?.getDisplayString() == '\$' ||
+                    expression2Value.staticType
+                            ?.getDisplayString()
+                            .indexOf('\$<') ==
+                        0)) {
+              if (dartObject2Value == null) {
+                // Later edit: Can't imagine a situation this could happen
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() dartObject2Value==null it is expected to be DartObject instance.''');
+                return null;
+              }
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() second \$() #2 ');
+
+              Expando<Identifier> topLevelIdentifiersProducingExpressions =
+                  Expando<Identifier>();
+              var expressionFCorrespondingParamSubExpressions =
+                  // it is not used anywhere - conditions - return fields of records  bool wasThereAnyEmptyFunctionBody, bool wasThereAnyEmptyReturnStatement}
+                  getUltimateNonConditionalNorSwitchExpressions(
+                      reporter,
+                      returnStatements,
+                      variableDeclarationsByElementId,
+                      assignmentExpressionsByElementId,
+                      expressionValue,
+                      topLevelIdentifiersProducingExpressions);
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() second \$() #2.1 expressionFCorrespondingParamSubExpressions.expressions = ${expressionFCorrespondingParamSubExpressions.expressions}, to be called with dartObject2Value = $dartObject2Value, expression2Value = $expression2Value, topLevelIdentifiersProducingExpressions = $topLevelIdentifiersProducingExpressions');
+
+              thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues = true;
+
+              checkingReturnTypesAndValuesSubCalls
+                  .add(checkingReturnTypesAndValues(
+                      reporter,
+                      returnStatements,
+                      assignmentExpressionsByElementId,
+                      variableDeclarationsByElementId,
+                      methodDeclaration,
+                      expressionFCorrespondingParamSubExpressions.expressions,
+                      topLevelIdentifiersProducingExpressions,
+                      // for nested calls:
+                      dartObject2Value,
+                      expression2Value));
+            } else {
+              bool? comparisonResult =
+                  compareValueFromUltimateExpressionWithAnotherUltimateValue(
+                      reporter,
+                      returnStatements,
+                      assignmentExpressionsByElementId,
+                      variableDeclarationsByElementId,
+                      expression: expressionValue,
+                      expressionMustBeConst: expressionMustBeConst,
+                      expression2: expression2Value,
+                      dartObjectParam2SupportForExpression2: dartObject2Value,
+                      diagnosticMessageNode:
+                          diagnosticMessageNode ?? expression ?? expression2!,
+                      expression2MustBeConst2: expression2MustBeConst2,
+                      methodDeclaration: methodDeclaration);
+
+              addLintMessage(
+                  reporter,
+                  diagnosticMessageNode ?? expression ?? expression2!,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() comparisonResult = $comparisonResult of ');
+
+              if (comparisonResult == null || comparisonResult == false) {
+                addLintMessage(
+                    reporter,
+                    diagnosticMessageNode ?? expression ?? expression2!,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() Error: comparisonResult = ${comparisonResult} comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
+                return comparisonResult;
+              }
+            }
+          }
+          addLintMessage(
+              reporter,
+              diagnosticMessageNode ?? expression ?? expression2!,
+              msgDebugMode
+                  ? errors.ErrorSeverity.ERROR
+                  : errors.ErrorSeverity.INFO,
+              'compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() success, thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues = ${thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues}, checkingReturnTypesAndValuesSubCalls = ${checkingReturnTypesAndValuesSubCalls}, if thereWasAtleastOneSubCallOfCheckingReturnTypesAndValues == true then this success is not full because for one or more expression InstanceCreationInvokation constructor invokation param there was another \$() instance which required a nested checkingReturnTypesAndValues which mail detect type/value error or succeed, some data: return true comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
+          return checkingReturnTypesAndValuesSubCalls.contains(false)
+              ? false
+              : checkingReturnTypesAndValuesSubCalls.contains(null)
+                  ? null
+                  : true;
+        }
+      }
+
+      if (expression != null ||
+          expression2 != null ||
+          diagnosticMessageNode != null) {
+        addLintMessage(
+            reporter,
+            diagnosticMessageNode ?? expression ?? expression2!,
+            msgDebugMode
+                ? errors.ErrorSeverity.ERROR
+                : errors.ErrorSeverity.INFO,
+            'compareValueFromUltimateExpressionWithAnotherUltimateValue() are values compared equal?: value == value2: ${value == value2}');
+      }
+      return null;
+      return value == value2;
+    } else {
+      if (expression != null ||
+          expression2 != null ||
+          diagnosticMessageNode != null) {
+        addLintMessage(
+            reporter,
+            diagnosticMessageNode ?? expression ?? expression2!,
+            msgDebugMode
+                ? errors.ErrorSeverity.ERROR
+                : errors.ErrorSeverity.INFO,
+            'compareValueFromUltimateExpressionWithAnotherUltimateValue() the two values compared are of instances that can\' be compared. The two values related record with all info look like this: value: $value, value2: $value2');
+      }
+      return null;
+    }
+  }
+
+  /// returns true if all supplied expressions are allowed to be returned or false if one fails to meet at least one condition existing in the method call
+  /// returns null if a syntax error like situation occurs with accompanying required return action.
+  /// this method's return value is not necessary needed but is used in nested calls it helps to track where the problems occur.
+  bool? checkingReturnTypesAndValues(
+      ErrorReporter reporter,
+      Map<dynamic, List<ReturnStatement>> returnStatements,
+      Map<int, List<AssignmentExpression>> assignmentExpressionsByElementId,
+      Map<int, List<VariableDeclaration>> variableDeclarationsByElementId,
+      MethodDeclaration methodDeclaration,
+      List<Expression> expressions,
+      Expando<Identifier>? topLevelIdentifiersProducingExpressions,
+      // for nested calls:
+      [DartObject? nestedCall$,
+      InstanceCreationExpression? nestedCall$Expression]) {
+    bool allExprssionsMeetRequirements = true;
+    addLintMessage(
+        reporter,
+        methodDeclaration,
+        msgDebugMode ? errors.ErrorSeverity.ERROR : errors.ErrorSeverity.INFO,
+        'checkingReturnTypesAndValues: Entered stage #0 expressions.length = ${expressions.length} expressions = ${expressions}');
+    for (int k = 0; k < expressions.length; k++) {
+      final Expression expression = expressions[k];
+      Expression messageNode = expression;
+      addLintMessage(
+          reporter,
+          methodDeclaration,
+          msgDebugMode ? errors.ErrorSeverity.ERROR : errors.ErrorSeverity.INFO,
+          'checkingReturnTypesAndValues: Entered stage #1');
+      addLintMessage(
+          reporter,
+          expression,
+          msgDebugMode ? errors.ErrorSeverity.ERROR : errors.ErrorSeverity.INFO,
+          'checkingReturnTypesAndValues: Entered stage #2');
+      try {
+        // the below line will throw if there is no element at all (so the last one too isn't);
+        methodDeclaration.declaredElement?.metadata.last;
+      } catch (e) {
+        /// for readability and consistency variable is used (true)
+        return allExprssionsMeetRequirements;
+      }
+      try {
+        if (methodDeclaration.declaredElement == null) {
+          continue;
+        }
+        final List<ElementAnnotation>? metad =
+            methodDeclaration.declaredElement!.metadata;
+
+        addLintMessage(
+            reporter,
+            methodDeclaration,
+            msgDebugMode
+                ? errors.ErrorSeverity.ERROR
+                : errors.ErrorSeverity.INFO,
+            'checkingReturnTypesAndValues: Entered stage #3');
+        addLintMessage(
+            reporter,
+            expression,
+            msgDebugMode
+                ? errors.ErrorSeverity.ERROR
+                : errors.ErrorSeverity.INFO,
+            'checkingReturnTypesAndValues: Entered stage #3');
+        if (metad != null &&
+            metad.isNotEmpty &&
+            metad.last.element?.displayName == "\$") {
+          /// You never expect this to be null
+          //NodeList<Expression>? metaAnnotationObjectArguments =
+          //    $AnnotationsByElementId[metad.last.element?.id]
+          //        ?.arguments
+          //        ?.arguments;
+          //if (metaAnnotationObjectArguments == null) {
+          //  //addLintMessage(
+          //  //    reporter,
+          //  //    expression,
+          //  //    msgDebugMode
+          //  //        ? errors.ErrorSeverity.ERROR
+          //  //        : errors.ErrorSeverity.INFO,
+          //  //    'checkingReturnTypesAndValues: Entered stage #4.5 metaAnnotationObjectArguments can\'t be null');
+          //}
+
+          bool hasBeenExceptionForTheCurrentNode = false;
+
+          DartObject? computedMetaObject =
+              nestedCall$ ?? metad.last.computeConstantValue();
+          if (computedMetaObject == null) continue;
+          bool hasConditionSwitchedTo$NOT = false;
+          bool hasConditionSwitchedTo$Nullable = false;
+          bool hasConditionSwitchedTo$Mutable = false;
+          bool theParamMatchesAtLeastOneTypeOrValueRequirements = false;
+          bool
+              thereWasAtLeastOneConditionElementBefore$NOTOr$IFOrEndOfTheCondition =
+              false;
+          bool
+              theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition =
+              false;
+          bool? is$ = computedMetaObject.getField('is\$')?.toBoolValue();
+          if (is$ != null && is$) {
+            addLintMessage(
+                reporter,
+                expression,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
+                'checkingReturnTypesAndValues: Entered stage #5');
+            TypeSystem typeSystem =
+                methodDeclaration.declaredElement!.library.typeSystem;
+
+            fieldsOf$InstanceLoop:
+            for (int i = 1; i <= standardNumberOfFields; i++) {
+              DartObject? currentField = computedMetaObject.getField('t$i');
+              Expression? currentFieldExpression;
+              if (!currentField!.isNull) {
+                // if would be null a param would has been passed to the constructor so the argument wouln't be available.
+                // even if null was passed the expression would be created, if so it wouldn't be used so ok anyway
+                if (nestedCall$Expression == null) {
+                  currentFieldExpression = methodDeclaration
+                      .metadata[methodDeclaration.metadata.length - 1]
+                      .arguments
+                      ?.arguments[i - 1];
+                } else {
+                  currentFieldExpression =
+                      nestedCall$Expression.argumentList.arguments[i - 1];
+                }
+              }
+              if (currentField.isNull) {
+                break;
+              } else if (currentField.type.toString() != "Type") {
+                /// $M(any qualifying expression, not Identifier only) not type but value/instance/literal, etc.
+                bool isMutableValue =
+                    false; // const is not required, f.e. a List eee = ['abc'] on declaration or (not and) first-and-the-only assignment is required but you can eee.add();
+                /// not type but value/instance/literal, etc.
+                /// $N(someIdentifier) also the final expression must be of Identifier with declared f.e. not int type but int?
+                bool isNullableValue = false;
+                bool isBetween = false;
+                bool isRegExp = false;
+
+                addLintMessage(
+                    reporter,
+                    expression,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'checkingReturnTypesAndValues: Entered stage #5.3, just before the while loop: currentFieldExpression == $currentFieldExpression, currentFieldExpression is InstanceCreationExpression == ${currentFieldExpression is InstanceCreationExpression}, currentFieldExpression.runtimeType == ${currentFieldExpression.runtimeType}, currentField?.type == ${currentField?.type} currentField?.type?.getDisplayString() == ${currentField?.type?.getDisplayString()} ');
+
+                /// TODO: KEEP IT/LOGIC COMPATIBLE WITH getExpressionWithCustomComparisonRequirements
+                /// related to isMutableValue and isNullableValue and possibly more in the future
+                /// the only reason for this loop is that there may be an instance $N, $M and possibly more in the future
+                /// and the $M $N instances are carriers of the real type or value
+                /// $M(any qualifying expression, not Identifier only) not type but value/instance/literal, etc.
+                /// $N(someIdentifier) also the final expression must be of Identifier with declared f.e. not int type but int?
+                /// when $M or $N like instance the variables like isMutable isNullable defined above this loop get their values
+                /// and because nesting is allowed for $N($M(someDeclaredVariable)) the continue mutableNullable: may repeat up to several times
+                /// untile the real compared currentField and currentFieldExpression expression is reached.
+                /// if no continue mutableNullable; is called at the end break mutableNullable; forcing the loop not to iterate twice
+                while (true) {
+                  if (currentField == null ||
+                      currentField!.isNull ||
+                      currentField!.type.toString() == "Type") {
+                    addLintMessage(
+                        reporter,
+                        methodDeclaration,
+                        errors.ErrorSeverity.ERROR,
+                        'checkingReturnTypesAndValues() Error: at this stage only instance objects are allowed no Types, null values carried by currentField or a currentField that is null not DartObject.');
+                    return false;
+                  } else {
+                    setUpNewFields() {
+                      currentField = currentField!.getField('t1');
+                      if (currentField != null) {
+                        currentFieldExpression = (currentFieldExpression
+                                as InstanceCreationExpression)
+                            .argumentList
+                            .arguments
+                            .first;
+                      } else {
+                        currentFieldExpression = null;
+                      }
+                    }
+
+                    addLintMessage(
+                        reporter,
+                        expression,
+                        msgDebugMode
+                            ? errors.ErrorSeverity.ERROR
+                            : errors.ErrorSeverity.INFO,
+                        'checkingReturnTypesAndValues: Entered stage #5.5, currentFieldExpression == $currentFieldExpression, currentFieldExpression is InstanceCreationExpression == ${currentFieldExpression is InstanceCreationExpression}, currentFieldExpression.runtimeType == ${currentFieldExpression.runtimeType}, currentField?.type == ${currentField?.type} currentField?.type?.getDisplayString() == ${currentField?.type?.getDisplayString()} ');
+
+                    switch (currentField?.type?.getDisplayString()) {
+                      case "\$M":
+                        isMutableValue = true;
+                        setUpNewFields();
+                        continue;
+                      case "\$N":
+                        isNullableValue = true;
+                        setUpNewFields();
+                        continue;
+                      case "\$B":
+                        isBetween = true;
+                        break;
+                      case "\$R":
+                        isRegExp = true;
+                        break;
+                    }
+                  }
+                  break;
+                }
+                if (isNullableValue || hasConditionSwitchedTo$Nullable) {
+                  Identifier? theTopLevelAncestorIdentifier =
+                      topLevelIdentifiersProducingExpressions?[expression];
+                  if (theTopLevelAncestorIdentifier == null) {
+                    /// not an error as i see - the expression match against a $() param just doesn't meet the required param condition
+                    addLintMessage(
+                        reporter,
+                        methodDeclaration,
+                        msgDebugMode
+                            ? errors.ErrorSeverity.ERROR
+                            : errors.ErrorSeverity.INFO,
+                        'checkingReturnTypesAndValues() Error: theTopLevelAncestorIdentifier = ${theTopLevelAncestorIdentifier} Current expression == $expression, expression is expected to belong to an Indentifier instance but the indentifier was not found as the \$N(somerequiredexpressionOrIdentifierHavingExpression) need to work with identifiers and the identifier instance (int? abc = 10 - abc is Identifier() instance) with declared type that is nullable f.e. int? not int, List? not List. And in this particlular case (\$N(...)). But the expression inside \$N() will be matched with the current expression not with the ancestor Identifier');
+                    continue;
+                  } else {
+                    addLintMessage(
+                        reporter,
+                        methodDeclaration,
+                        msgDebugMode
+                            ? errors.ErrorSeverity.ERROR
+                            : errors.ErrorSeverity.INFO,
+                        'checkingReturnTypesAndValues: theTopLevelAncestorIdentifier = ${theTopLevelAncestorIdentifier} isNullableValue == true but is the identifier defined as nullable type?: theTopLevelAncestorIdentifier.staticType?.nullabilitySuffix == NullabilitySuffix.question == ${theTopLevelAncestorIdentifier.staticType?.nullabilitySuffix == NullabilitySuffix.question} hence Some data: currentFieldExpression is! Identifier == ${currentFieldExpression is! Identifier} ${currentFieldExpression is! Identifier ? currentFieldExpression?.staticType : (currentFieldExpression as Identifier).staticType?.nullabilitySuffix} == ${currentFieldExpression is! Identifier ? currentFieldExpression?.staticType : (currentFieldExpression as Identifier).staticType?.nullabilitySuffix} currentFieldExpression.staticType == ${currentFieldExpression?.staticType}');
+                    // FIXME: i expect this to contain info about nullabilitySuffix
+                    // if not you have to go to the declaration variable and get info about the type - left hand or writeElement dont remember now
+                    if (theTopLevelAncestorIdentifier
+                            .staticType?.nullabilitySuffix !=
+                        NullabilitySuffix.question) {
+                      // not an error, just doesn't match the $() conditions for the current expression
+                      addLintMessage(
+                          reporter,
+                          methodDeclaration,
+                          msgDebugMode
+                              ? errors.ErrorSeverity.ERROR
+                              : errors.ErrorSeverity.INFO,
+                          'checkingReturnTypesAndValues() info: Current expression which was to be mached against the \$N(somerequiredexpressionAlsoMayBeIdentifier) has it\'s own closest ancestor Identifier() instance but the ancestor identifier was not defined with a nullable type (int? abc = 10 - abc is Identifier() instance) with declared type that is nullable f.e. int? not int, List? not List. WARNING! Read doc // info above the place this message was defined, info on how to get the nullability info in different way if this was incorrect');
+                      continue;
+                    }
+                  }
+                }
+
+                // TODO: we can try to get expression instead of DartObject to be able compare constructors, list, maps and sets not only DartObjects or simple type values like 2.8, "abc"
+                // ((inv.argumentList.arguments.first.staticParameterElement?.metadata.first.element?.declaration as ClassMember) as FieldDeclaration).fields.variables.first.initializer;
+                bool wasUsedComparisonResult2 = false;
+                bool? comparisonResult;
+                bool? comparisonResult2;
+                try {
+                  //addLintMessage(
+                  //    reporter,
+                  //    methodDeclaration,
+                  //    msgDebugMode
+                  //        ? errors.ErrorSeverity.ERROR
+                  //        : errors.ErrorSeverity.INFO,
+                  //    'checkingReturnTypesAndValues: the expression represents value. methodDeclaration.metadata.length = ${methodDeclaration.metadata.length}');
+                  //addLintMessage(
+                  //    reporter,
+                  //    messageNode,
+                  //    msgDebugMode
+                  //        ? errors.ErrorSeverity.ERROR
+                  //        : errors.ErrorSeverity.INFO,
+                  //    'checkingReturnTypesAndValues: the expression represents value. ');
+                  comparisonResult =
+                      compareValueFromUltimateExpressionWithAnotherUltimateValue(
+                          reporter,
+                          returnStatements,
+                          assignmentExpressionsByElementId,
+                          variableDeclarationsByElementId,
+                          expression: expression,
+                          expressionMustBeConst: !(isMutableValue ||
+                              hasConditionSwitchedTo$Mutable),
+                          dartObjectParam2: currentField,
+                          expressionParam2SupportFordartObjectParam2:
+                              currentFieldExpression,
+                          expression2MustBeConst2:
+                              false, // currentField doesn't have to be const but on first and only value assignment calculable/readable final values must repeat for constructor, list/map/set/record literals,,
+                          isBetween: isBetween,
+                          isRegExp: isRegExp,
+                          methodDeclaration: methodDeclaration);
+
+                  if (!isBetween &&
+                          !isRegExp &&
+                          comparisonResult == null &&
+                          currentFieldExpression != null
+                      //&& methodDeclaration.metadata.length > 0 &&
+                      //methodDeclaration
+                      //    .metadata[methodDeclaration.metadata.length - 1]
+                      //    .arguments
+                      //    ?.arguments
+                      //    .length is int &&
+                      //methodDeclaration
+                      //        .metadata[methodDeclaration.metadata.length - 1]
+                      //        .arguments!
+                      //        .arguments
+                      //        .length >=
+                      //    i - 1 &&
+                      //methodDeclaration
+                      //        .metadata[methodDeclaration.metadata.length - 1]
+                      //        .arguments
+                      //        ?.arguments[i - 1] !=
+                      //    null
+                      ) {
+                    wasUsedComparisonResult2 = true;
+                    addLintMessage(
+                        reporter,
+                        methodDeclaration,
+                        msgDebugMode
+                            ? errors.ErrorSeverity.ERROR
+                            : errors.ErrorSeverity.INFO,
+                        'checkingReturnTypesAndValues: comparing with comparisonResult2 : expression: ${methodDeclaration.metadata[methodDeclaration.metadata.length - 1].arguments?.arguments[i - 1]}');
+                    addLintMessage(
+                        reporter,
+                        messageNode,
+                        msgDebugMode
+                            ? errors.ErrorSeverity.ERROR
+                            : errors.ErrorSeverity.INFO,
+                        'checkingReturnTypesAndValues: comparing with comparisonResult2 : expression: ${methodDeclaration.metadata[methodDeclaration.metadata.length - 1].arguments?.arguments[i - 1]}');
+
+                    comparisonResult2 =
+                        compareValueFromUltimateExpressionWithAnotherUltimateValue(
+                            reporter,
+                            returnStatements,
+                            assignmentExpressionsByElementId,
+                            variableDeclarationsByElementId,
+                            expression: expression,
+                            expressionMustBeConst: !(isMutableValue ||
+                                hasConditionSwitchedTo$Mutable),
+                            expression2:
+                                currentFieldExpression // to remind you in the previous method call getField was used but it failed so we use this corresponding expression
+                            ,
+                            dartObjectParam2SupportForExpression2: currentField,
+                            expression2MustBeConst2:
+                                false, // expression corresponding to getField doesn't have to be const but on first and only value assignment calculable/readable final values must repeat for constructor, list/map/set/record literals,
+                            //isBetween: isBetween,
+                            //isRegExp: isRegExp
+                            diagnosticMessageNode: methodDeclaration,
+                            methodDeclaration: methodDeclaration);
+                  }
+                } catch (e, stackTrace) {
+                  addLintMessage(
+                      reporter,
+                      methodDeclaration,
+                      errors.ErrorSeverity.ERROR,
+                      'checkingReturnTypesAndValues() catched error/exception: i==$i (meta = i but Annotation argument has index i-1) e = $e, stackTrace $stackTrace');
+                  addLintMessage(
+                      reporter,
+                      messageNode,
+                      errors.ErrorSeverity.ERROR,
+                      'checkingReturnTypesAndValues() catched error/exception: i==$i (meta = i but Annotation argument has index i-1) e = $e, stackTrace $stackTrace');
+                  //'checkingReturnTypesAndValues() catched error: metaAnnotationObjectArguments= ${metaAnnotationObjectArguments}, e = $e, stackTrace $stackTrace');
+                  continue;
+                }
+
+                addLintMessage(
+                    reporter,
+                    methodDeclaration,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'checkingReturnTypesAndValues() INFO WHAT WE HAVE` expressions compared: $expression, $currentField. comparisonResult = ${comparisonResult}, comparisonResult2 = ${comparisonResult2}, wasUsedComparisonResult2 = $wasUsedComparisonResult2, isBetween: $isBetween, isRegExp: $isRegExp');
+                addLintMessage(
+                    reporter,
+                    messageNode,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'checkingReturnTypesAndValues() INFO WHAT WE HAVE` expressions compared: $expression, $currentField. comparisonResult = ${comparisonResult}, comparisonResult2 = ${comparisonResult2}, wasUsedComparisonResult2 = $wasUsedComparisonResult2, isBetween: $isBetween, isRegExp: $isRegExp');
+
+                // FIXME: When using the code from danno_script_lints_discovery_lab.dart (or danno_script_lints_discovery_lab.dart?) somewhere else take into account that
+                // "syntax" instances $IF() $THEN() don't allow for thereWasAtLeastOneConditionElementBefore$NOTOr$IFOrEndOfTheCondition = true;
+                // which is reserved for normal values - literals, variables
+                // but there maybe $BETWEEN(5, 10) IMPLEMENTED IN THE FUTURE it won't be "syntax" instance
+                if (!hasConditionSwitchedTo$NOT) {
+                  thereWasAtLeastOneConditionElementBefore$NOTOr$IFOrEndOfTheCondition =
+                      true;
+                }
+                if (comparisonResult == true) {
+                  addLintMessage(
+                      reporter,
+                      messageNode,
+                      msgDebugMode
+                          ? errors.ErrorSeverity.ERROR
+                          : errors.ErrorSeverity.INFO,
+                      'checkingReturnTypesAndValues() comparisonResult the expression is not type so it should be a value to be compared like 0.345 or an instance of some class SomeClass()');
+                  if (hasConditionSwitchedTo$NOT) {
+                    addLintMessage(
+                        reporter,
+                        messageNode,
+                        msgDebugMode
+                            ? errors.ErrorSeverity.ERROR
+                            : errors.ErrorSeverity.INFO,
+                        'checkingReturnTypesAndValues() comparisonResult the expression matches value (not type) at least one \$() NOT CONDITION (after \$NOT)');
+                    theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition =
+                        true;
+                  } else {
+                    addLintMessage(
+                        reporter,
+                        messageNode,
+                        msgDebugMode
+                            ? errors.ErrorSeverity.ERROR
+                            : errors.ErrorSeverity.INFO,
+                        'checkingReturnTypesAndValues() comparisonResult the expression matches value (not type) at least one \$() NORMAL (not after \$NOT) CONDITION');
+                    theParamMatchesAtLeastOneTypeOrValueRequirements = true;
+                  }
+                } else if (comparisonResult2 == true) {
+                  addLintMessage(
+                      reporter,
+                      messageNode,
+                      msgDebugMode
+                          ? errors.ErrorSeverity.ERROR
+                          : errors.ErrorSeverity.INFO,
+                      'checkingReturnTypesAndValues() comparisonResult2 the expression is not type so it should be a value to be compared like 0.345 or an instance of some class SomeClass()');
+                  if (hasConditionSwitchedTo$NOT) {
+                    addLintMessage(
+                        reporter,
+                        messageNode,
+                        msgDebugMode
+                            ? errors.ErrorSeverity.ERROR
+                            : errors.ErrorSeverity.INFO,
+                        'checkingReturnTypesAndValues() comparisonResult2 the expression matches value (not type) at least one \$() NOT CONDITION (after \$NOT)');
+                    theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition =
+                        true;
+                  } else {
+                    addLintMessage(
+                        reporter,
+                        messageNode,
+                        msgDebugMode
+                            ? errors.ErrorSeverity.ERROR
+                            : errors.ErrorSeverity.INFO,
+                        'checkingReturnTypesAndValues() the expression matches value (not type) at least one \$() NORMAL (not after \$NOT) CONDITION');
+                    theParamMatchesAtLeastOneTypeOrValueRequirements = true;
+                  }
+                } else {
+                  // nothing bad comparisonResult and ...2 are null or false - just doesn't match
+                  // if there were dart anno types "syntax" errors (f.e. $B(3, 1) 3 must be less than the second param) along the way they already were added as addLintMessage.
+                  addLintMessage(
+                      reporter,
+                      messageNode,
+                      msgDebugMode
+                          ? errors.ErrorSeverity.ERROR
+                          : errors.ErrorSeverity.INFO,
+                      'checkingReturnTypesAndValues() comparisonResult = ${comparisonResult}, comparisonResult2 = ${comparisonResult2}, wasUsedComparisonResult2 = $wasUsedComparisonResult2, comparisonResult == null||comparisonResult==false which means for null the result was not comparable because of Expression types not handled yet (not implemented, or "impossible" to handle), or expressions are of different types, or if == false two expressions/objects were compared successfuly but not equal. Old (maybe not up to date) error info: Sort of Syntax Error due to the difficulty with implementing all features, to avoid this problem use only variable names (maybe required to be const (verify)) instead of direct values like [10, 20], but you can use 10, 2.5, \'abc\' not \'abc\$name wer\'. Also try to check out if some other types like the mentioned [10, 20] - handling them havent\'t been in the incoming versions, implemented At least one value hasn\'t been found or both values were found but one of them was received from Instance() object but te second from a DartObject?, while for a values like int it is not a problem, but for List or SomeClass() instance at the time of writig this message the two objects are represented by two different class instances. It is practical to temporary set up theParamMatchesAtLeastOneTypeOrValueRequirementsOf\$NOTPartOfTheCondition = true; how to fixit? expression causing problem: $expression, $currentField.');
+
+                  /// ??? was: theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition = true;
+                }
+              } else {
+                // .valueHasBeenFound == null changes the meaning of potential null of value.value below:
+                // isTheValueOfExpressionNull is null when not set up at all becaue the first if statement (hasExpressionTypeNullabilitySuffix)
+                // Why it is not a problem when the value was not found value.value value is not calculable,
+                // only for value.value == null it is always calculable;
+                // we know that because HERE we work on ultimate non-conditional final expressions where there is a type known:
+                // such an non-ultimate expression looks like this:
+                // int? abc = 20 + unknownNonConstantValue;
+                // abc ?? cde == null? null:2.5;
+                // the ultimate expressions we work here is abc, null and 2.5
+                // getting the null will never fail.
+                // 2.5 we know it is double but we don't need it's computed value.
+                // abc is uncalculable but we know it is int as 20 + anything is always int
+                // also unknownNonConstantValue + 20 is not null but as the declared type of abc is int? we know it must be int because you if unknownNonConstantValue == null then you can't add null + 20
+                // FIXME:
+                // [Last edit:] The final decision must be:
+                // the each ultimate expression (List<[ultimate]Expression)) from a variable must be taken.
+                // Types: Both for const and and variable. Because the declared num? might be be null, int, double but $($NOT double) says it all,
+                // Values: it doesn't matter
+                // [Edit:] not sufficient sleep: the below is not a problem as all variables have calculated value
+                // because of that you know if the value is null value or something else
+                // if something else it is calculated and get the underlying type
+                // but while it is true you can't get it's underlying type? to be compared here? guite a puzzle.
+                // FIXME: FIXME: PROBABLY FOUND THE BEST WAY TO SOLVE THE PROBLEM:
+                // LITERALS USE FOR F.E. LIST AND MAP also CollectionElement IT TURNS OUT Expression is implementing CollectionElement
+                // and while collection element might be ForElement and more only non expression element classes
+                // but literal probably it is only [Expression].
+                // SO IS there a CHANCE TO COMPARE IT WITH Itendtifier() BECAUSE
+                // Identifier() has .elements here each has [CollectionElement] and each rather "must" have Expression.
+                // But as i see two the same looking expressions might produce different values if a const [const1, const2] or variable with the same name produces different values
+                // !!! No? Possibly if you have NodeList<CollectionElement> for Identifier and ListLiteral
+                // !!! No? you might try to compare it with eqal ==
+                // what of instance of SomeClass()?
+                // we have InstanceCreationExpression(): f.e. expression.unParenthesized;
+                // then we have Itentifier which has elements CollectionElements (assuming is also Expression)
+                // it might be one element (can be more?)
+                // BUT WE CANNOT COMPUTE IT AS WITH LIST AND MAP AND SET WE CAN'T
+                // SO PROBABLY IT'S A MESS.
+                // THE ONLY WAY IT COULD BE DONE IS
+                // WHEN ALL COLLECTION ELEMENTS ARE CALCULATE LIKE [10, 2.8, 'some stRING', $constValueMaybeAAAAAAAAAAAAAAAAaa, SomeOtherClass()] (MAYBE LATER "STRING $a"),
+                // possibly also constructors with params like SomeClass(10, 2.8, 'some stRING', $constValueMaybe) (MAYBE LATER "STRING $a"),
+                // SomeClass(10, 2.8, 'some stRING', constValueMaybeAAAAAAAAAAAAAAAAaa, SomeOtherClass())
+                // SomeClass(10, 2.8, 'some stRING', constValueMaybeBBBBBBBBBBBBBBBBBBB, SomeOtherClass())
+                // constValueMaybeAAAAAAAAAAAAAAAAaa....computeConstantValue()! == $constValueMaybeBBBBBBBBBBBBBBBBBBB....computeConstantValue()!
+                // probably no need to check .isNull but make sure it returns for DartObject the same for isDartCoreInt for example like for non-typically-handled values.
+                // HOW COULD IT BE DONE FOR EACH COLLECTION ELEMENT:
+                // getUltimateNonConditionalNorSwitchExpressions GETS YOU EXPRESSIONS IN A UNIQUE ORDER
+                // SO BOTH COMARABLE each collectoin element expression must be equal if it is SomceClass(...) then the params are like collection elements so the list of returned expressions from the constructor must be comparable with other object - in the right order.
+                // SO WE KINDA VERY CLOSE TO SOLVE THE PROBLEM.
+                // IT COULD BE SO BECAUSE such constructed instances procuce always the same object (our value) exactly of the same class (class name must agree - dont know if cast as is a problem.).
+                // Also instances don't have to be created like const SomeClass - it is important that the constructor declaration is preceded with const.
+                // ======================
+                // I just noticed then that you may or may not have to calculate the the non-null type of unknownNonConstantValue;
+                // of course not simple int? but maybe Object? but it is String or List or SomeClass
+                // we haven't broke it down, did we?
+                // this is the only spot where we have to ignore declared type like Object?
+                // and get the final type of expression itself to get closer types
+                //
+                // REVISE IT AGAIN
+                // FIXME: END.
+                // so analyzer does it for you but this is breaking down the logic
+                // So the final expression is not null so the following correct:
+                addLintMessage(
+                    reporter,
+                    messageNode,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
+                    'checkingReturnTypesAndValues() the \$ constructor argument is type: currentField = ${currentField}, currentField.type = ${currentField.type} currentField!.toTypeValue()!.getDisplayString() = ${currentField!.toTypeValue()!.getDisplayString()}, typeSystem.isSubtypeOf(expression.staticType!, currentField!.toTypeValue()!) = ${typeSystem.isSubtypeOf(expression.staticType!, currentField!.toTypeValue()!)}');
+
+                String typeValueString =
+                    currentField!.toTypeValue()!.getDisplayString();
+                // null when not set up:
+                bool? isTheValueOfExpressionNull;
+
+                if (typeValueString == "Null") {
+                  // we have to check if it is just null, and fortunatelly you can calculate it whether it is Itentifier or BooleanLiteral (Literal)
+                  var value = getComparableValueFromExpressionOrDartObject(
+                      reporter,
+                      returnStatements,
+                      assignmentExpressionsByElementId,
+                      variableDeclarationsByElementId,
+                      expression);
+                  if (value.valueHasBeenFound && value.value == null) {
+                    isTheValueOfExpressionNull = true;
+                  } else {
+                    isTheValueOfExpressionNull == false;
+                  }
+                }
+
+                //typeSystem.promoteToNonNull();
+                addLintMessage(reporter, messageNode, errors.ErrorSeverity.INFO,
+                    'checkingReturnTypesAndValues meta param value is Type. isTheValueOfExpressionNull = $isTheValueOfExpressionNull, typeSystem.isSubtypeOf(expression.staticType!, currentField.toTypeValue()!) = ${typeSystem.isSubtypeOf(expression.staticType!, currentField!.toTypeValue()!)} , expression.staticType = ${expression.staticType}, currentField.toTypeValue() = ${currentField!.toTypeValue()}');
+                if (expression.staticType == null) {
+                  addLintMessage(
+                      reporter,
+                      messageNode,
+                      errors.ErrorSeverity.ERROR,
+                      'checkingReturnTypesAndValues Error: it is unexpected that expression.staticType == null');
+                  return null;
+                }
+                if (typeValueString == '\$NOT') {
+                  hasConditionSwitchedTo$NOT = true;
+                  hasConditionSwitchedTo$Nullable = false;
+                  hasConditionSwitchedTo$Mutable = false;
+                } else if (typeValueString == '\$N') {
+                  hasConditionSwitchedTo$Nullable = true;
+                } else if (typeValueString == '\$M') {
+                  hasConditionSwitchedTo$Mutable = true;
+                } else if ((typeValueString == "Null" &&
+                        isTheValueOfExpressionNull == true) ||
+                    typeSystem.isSubtypeOf(
+                        expression.staticType!, currentField!.toTypeValue()!)) {
+                  if (hasConditionSwitchedTo$NOT) {
+                    theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition =
+                        true;
+                    addLintMessage(
+                        reporter,
+                        messageNode,
+                        errors.ErrorSeverity.INFO,
+                        'info: after \$NOT matches: expression = ${expression}, currentField.type = ${currentField!.type}');
+                  } else {
+                    addLintMessage(
+                        reporter,
+                        messageNode,
+                        errors.ErrorSeverity.INFO,
+                        'info: before \$NOT matches: expression = ${expression}, currentField.type = ${currentField!.type}');
+                    theParamMatchesAtLeastOneTypeOrValueRequirements = true;
+                  }
+                } else {
+                  if (!hasConditionSwitchedTo$NOT) {
+                    thereWasAtLeastOneConditionElementBefore$NOTOr$IFOrEndOfTheCondition =
+                        true;
+                  }
+                }
+              }
+            }
+
+            if (theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition ||
+                (!theParamMatchesAtLeastOneTypeOrValueRequirements &&
+                    thereWasAtLeastOneConditionElementBefore$NOTOr$IFOrEndOfTheCondition)) {
+              allExprssionsMeetRequirements = false;
+              addLintMessage(reporter, messageNode, errors.ErrorSeverity.ERROR,
+                  'Error: A return statement expression/value is not of required type nor value, if expression is complex with possible multiple ulitmate possible value returns i means that at least one of the sub values is not meeting the expectations of a returned value: expression = ${expression.toSource()}, theParamMatchesAtLeastOneTypeOrValueRequirementsOf\$NOTPartOfTheCondition = ${theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition}, theParamMatchesAtLeastOneTypeOrValueRequirements = $theParamMatchesAtLeastOneTypeOrValueRequirements, thereWasAtLeastOneConditionElementBefore\$NOTOr\$IFOrEndOfTheCondition = ${thereWasAtLeastOneConditionElementBefore$NOTOr$IFOrEndOfTheCondition}');
+            } else {
+              addLintMessage(
+                  reporter,
+                  messageNode,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
+                  'Success (overall): A return statement expression/value is of required type or value,: expression = ${expression.toSource()} allExprssionsMeetRequirements == $allExprssionsMeetRequirements');
+            }
+          }
+        }
+      } catch (e, stackTrace) {
+        addLintMessage(reporter, methodDeclaration, errors.ErrorSeverity.ERROR,
+            'Lint plugin exception: $e $stackTrace');
+      }
+    }
+    return allExprssionsMeetRequirements;
+  }
 
   /// this calls [getUltimateNonConditionalNorSwitchExpressions] in a way that the returned value by
   /// this getUltimateConstLikeExpressions method is null when a conditional expression exp?true : false was found
@@ -320,7 +2611,12 @@ class DannoScriptLintsDiscoveryLab extends DartLintRule {
                   'getUltimateNonConditionalNorSwitchExpressions(), there is no need for this exception to be handled becuse it was originally to be used only by getUltimateConstLikeExpressions() method');
             }
 
-            addLintMessage(reporter, expression, errors.ErrorSeverity.ERROR,
+            addLintMessage(
+                reporter,
+                expression,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
                 'getUltimateNonConditionalNorSwitchExpressions() iterationExpressions[i] is InvocationExpression == true : 1');
             if (iterationExpressions[i] is MethodInvocation) {
               addLintMessage(reporter, expression, errors.ErrorSeverity.ERROR,
@@ -382,37 +2678,66 @@ class DannoScriptLintsDiscoveryLab extends DartLintRule {
               Identifier? theTopLevelAncestorIdentifier =
                   topLevelIdentifiersProducingExpressions[
                       iterationExpressions[i]];
-              addLintMessage(reporter, expression, errors.ErrorSeverity.ERROR,
+              addLintMessage(
+                  reporter,
+                  expression,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
                   'getUltimateNonConditionalNorSwitchExpressions() iterationExpressions[i] is InvocationExpression == true : 5');
 
               var functionInv =
                   iterationExpressions[i] as FunctionExpressionInvocation;
               if (functionInv.function is! FunctionExpression) {
-                addLintMessage(reporter, expression, errors.ErrorSeverity.ERROR,
+                addLintMessage(
+                    reporter,
+                    expression,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
                     'getUltimateNonConditionalNorSwitchExpressions() functionInv; intuitively shouldn\'t be error here: error methodInv.function is! FunctionDeclaration ${functionInv.function.runtimeType} ${(functionInv.function as FunctionExpression).declaredElement?.id} ${functionInv.function.toString()} ${functionInv.function.toSource()}  ${functionInv.staticElement?.declaration.source.contents.data}');
                 continue;
               }
-              addLintMessage(reporter, expression, errors.ErrorSeverity.ERROR,
+              addLintMessage(
+                  reporter,
+                  expression,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
                   'getUltimateNonConditionalNorSwitchExpressions() iterationExpressions[i] is InvocationExpression == true : 6');
 
               FunctionBody body =
                   (functionInv.function as FunctionExpression).body;
-              addLintMessage(reporter, expression, errors.ErrorSeverity.ERROR,
+              addLintMessage(
+                  reporter,
+                  expression,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
                   'getUltimateNonConditionalNorSwitchExpressions() iterationExpressions[i] is InvocationExpression == true : 6.1');
               if (body is BlockFunctionBody) {
-                addLintMessage(reporter, expression, errors.ErrorSeverity.ERROR,
+                addLintMessage(
+                    reporter,
+                    expression,
+                    msgDebugMode
+                        ? errors.ErrorSeverity.ERROR
+                        : errors.ErrorSeverity.INFO,
                     'getUltimateNonConditionalNorSwitchExpressions() iterationExpressions[i] is InvocationExpression == true : 6.2');
                 body.block.statements.forEach((Statement statement) {
                   addLintMessage(
                       reporter,
                       expression,
-                      errors.ErrorSeverity.ERROR,
+                      msgDebugMode
+                          ? errors.ErrorSeverity.ERROR
+                          : errors.ErrorSeverity.INFO,
                       'getUltimateNonConditionalNorSwitchExpressions() iterationExpressions[i] is InvocationExpression == true : 6.3');
                   if (statement is ReturnStatement) {
                     addLintMessage(
                         reporter,
                         expression,
-                        errors.ErrorSeverity.ERROR,
+                        msgDebugMode
+                            ? errors.ErrorSeverity.ERROR
+                            : errors.ErrorSeverity.INFO,
                         'getUltimateNonConditionalNorSwitchExpressions() iterationExpressions[i] is InvocationExpression == true : 6.4');
                     if (statement.expression != null) {
                       if (theTopLevelAncestorIdentifier != null) {
@@ -441,7 +2766,12 @@ class DannoScriptLintsDiscoveryLab extends DartLintRule {
               int? id = (functionInv.function as FunctionExpression)
                   .declaredElement
                   ?.id;
-              addLintMessage(reporter, expression, errors.ErrorSeverity.ERROR,
+              addLintMessage(
+                  reporter,
+                  expression,
+                  msgDebugMode
+                      ? errors.ErrorSeverity.ERROR
+                      : errors.ErrorSeverity.INFO,
                   'getUltimateNonConditionalNorSwitchExpressions() iterationExpressions[i] is InvocationExpression == true : 7, id = $id, returnStatements[id] = ${returnStatements[id]}');
               var returnStatementList = returnStatements[id];
               if (returnStatementList == null) {
@@ -562,6 +2892,8 @@ class DannoScriptLintsDiscoveryLab extends DartLintRule {
         addLintMessage(reporter, messageNode, errors.ErrorSeverity.ERROR,
             'getComparableValueFromExpressionOrDartObject() stage #T4 ERROR: probably object taken from annotation getField - dreamed of getting variable from it like from Identifier compure... DartObject. : dartObject = $dartObject, dartObject?.variable == ${dartObject?.variable}, dartObject?.type == ${dartObject?.type} , dartObject?.type?.element == ${dartObject?.type?.element}');
         if (dartObject != null) {
+          valueMap[ComparableUltimateValue.dartObject] = dartObject;
+
           /// We assume that for the below conditions like dartObject.toBoolValue() must not be null
           if (dartObject.isNull) {
             valueMap[ComparableUltimateValue.simple] = null;
@@ -1058,10 +3390,17 @@ class DannoScriptLintsDiscoveryLab extends DartLintRule {
                 ? errors.ErrorSeverity.ERROR
                 : errors.ErrorSeverity.INFO,
             'getComparableValueFromExpressionOrDartObject()  dartObject supplied, stage #T2');
-        return (
-          valueHasBeenFound: false,
-          value: null,
+        valueMap[ComparableUltimateValue.dartObject] = dartObject;
+        ({
+          bool valueHasBeenFound,
+          Map<ComparableUltimateValue, Object?>? value,
+          // UltimateValueType? ultimateValueType
+        }) record = (
+          valueHasBeenFound: true,
+          value: valueMap,
         );
+
+        return record;
       } else {
         ({
           bool valueHasBeenFound,
@@ -1078,9 +3417,19 @@ class DannoScriptLintsDiscoveryLab extends DartLintRule {
         } else {
           msg +=
               'getComparableValueFromExpressionOrDartObject() dartObject supplied, return value hasn\'t been found';
+          /*
+          Previously:
           record = (
             valueHasBeenFound: false,
             value: null,
+          );
+          
+           */
+
+          valueMap[ComparableUltimateValue.dartObject] = dartObject;
+          record = (
+            valueHasBeenFound: true,
+            value: valueMap,
           );
         }
         if (dartObject.variable != null || msgNode != null) {
@@ -1109,7 +3458,9 @@ class DannoScriptLintsDiscoveryLab extends DartLintRule {
 
   addLintMessage(ErrorReporter reporter, Object? node,
       errors.ErrorSeverity errorSeverity, String message) {
-    if (node == null) return;
+    if (node == null ||
+        (displayErrorsOnly && errorSeverity != errors.ErrorSeverity.ERROR))
+      return;
     try {
       if (node is Expression || node is AstNode) {
         reporter.atNode(
@@ -1139,8 +3490,6 @@ class DannoScriptLintsDiscoveryLab extends DartLintRule {
     ErrorReporter reporter,
     CustomLintContext context,
   ) {
-    int standardNumberOfFields = 100;
-
     /// WARNING! Based on the preliminary knowledge that parent node
     /// key is function or [MethodDeclaration] method declaration id;
     /// is always a [FunctionDeclaration] or [MethodDeclaration] - both are not extending or implementing each other.
@@ -1208,1343 +3557,6 @@ class DannoScriptLintsDiscoveryLab extends DartLintRule {
           }
 
           return (expression: finalExpression, isMutableValue: isMutableValue);
-        }
-      }
-    }
-
-    /// Warning! this method can't be called with $M() or $N() and of this exact purposed instances only non-functional expressions.
-    /// Compares only a declared variable that had only one value assignment - on declaration or later. If expression(/2) is Identifier() and it returns more than one assignement expressions on calling getComparableValueFromExpressionOrDartObject (yskrn from declaration and/or from possible many assigments) a lint error is shown, but the code smoothly works and doesn't throw Exception.
-    /// This means it is ensure that two values compared have no more that one value assignment so the value can be treated as const/final.
-    /// Because of this if compareOneTimeAssignmentExpression == false all assignments are used for comparison from more than one element "expressions" sources (one expressions may be one assignment second many assignments or both can be many assignments)
-    /// if one comparison fails - error is reported and false is returned
-    /// It means on declaration (initializer expression), or on first assignment some time after declaration but with no second or more declarations.
-    /// This is necessary to ensure the const/final like nature of the assignment - not neccessary const but you know the value is certain (in standard dart for a method call you can't use the value of the variable that was declared but not initialized with value).
-    /// returns true if two computable values are equal like 2.8 == 2.8 or false otherwise.
-    /// Warning: is it needed?: returns null if:
-    /// 1. an expression is not handled
-    /// 2. couldn't find two expressions of the same sort - we can compare two [DartObject]s but no one DartObject and one Expression,
-    /// [Edit:] update, currently value for input DartObject returns f.e. DartObject, and expression/s with declaration and all assignments and if you require only one assignment on declaration or later then pass to this method compareOneTimeAssignmentExpression = true;
-    /// 3. Possibly (may not be implemented yet) if a difficult expression like function doesn't produce non-null ExecutableElement (like FunctionElement) .staticElement which i guest may mean that any return type or expression was not computable.
-    ///    to remind me: also DartObject .toFunctionValue() produces ExecutableElement - with casting or now to function or method element it might be compared too with ==
-    bool? compareValueFromUltimateExpressionWithAnotherUltimateValue({
-      Expression? expression,
-      DartObject? dartObjectParam,
-      bool expressionMustBeConst = true,
-      Expression? expression2,
-      DartObject? dartObjectParam2,
-      Object? diagnosticMessageNode,
-      bool expression2MustBeConst2 = true,
-      // If present, to match conditions the expression param must represent simple value and [String] in this case and dartObjectParam2 which is "sort-of" staticly created $R "instance" is not null (not necessary to use expression2) and expression is checked if it matches the regexp
-      bool isRegExp = false,
-      // If present, If present, to match conditions the expression param must represent simple value and [num] in this case and dartObjectParam2 which is "sort-of" staticly created $B "instance" is not null (not necessary to use expression2) and expression is checked if it matches the $R range object values and other settings.
-      bool isBetween = false,
-    }) {
-      if (expression != null ||
-          expression2 != null ||
-          diagnosticMessageNode != null) {
-        addLintMessage(
-            reporter,
-            diagnosticMessageNode ?? expression ?? expression2!,
-            msgDebugMode
-                ? errors.ErrorSeverity.ERROR
-                : errors.ErrorSeverity.WARNING,
-            'compareValueFromUltimateExpressionWithAnotherUltimateValue(), WE ENTERED THIS TERRIBLE METHOD !');
-      }
-      if (expression == null &&
-          dartObjectParam == null &&
-          (diagnosticMessageNode != null || expression2 != null)) {
-        addLintMessage(
-            reporter,
-            diagnosticMessageNode ?? expression2!,
-            errors.ErrorSeverity.ERROR,
-            'compareValueFromUltimateExpressionWithAnotherUltimateValue() Error: Can\'t both expression and dartObjectParam be null');
-      }
-      if (expression2 == null &&
-          dartObjectParam2 == null &&
-          (diagnosticMessageNode != null || expression != null)) {
-        addLintMessage(
-            reporter,
-            diagnosticMessageNode ?? expression!,
-            errors.ErrorSeverity.ERROR,
-            'compareValueFromUltimateExpressionWithAnotherUltimateValue() Error: Can\'t both expression2 and dartObjectParam2 be null');
-      }
-
-      // ??? We need to provide two ultimate objects ready to be compared whatever they might be.
-      // If in the following a key 1: or 2: will could'nt has been found an expression for a given key couldn't for now a way to translated into something easy to compare has been found.
-      // now in theory we can compare values starting from easy ones.
-      var value = getComparableValueFromExpressionOrDartObject(
-          reporter,
-          returnStatements,
-          assignmentExpressionsByElementId,
-          variableDeclarationsByElementId,
-          expression,
-          dartObjectParam,
-          diagnosticMessageNode ?? expression ?? expression2);
-      var value2 = getComparableValueFromExpressionOrDartObject(
-          reporter,
-          returnStatements,
-          assignmentExpressionsByElementId,
-          variableDeclarationsByElementId,
-          expression2,
-          dartObjectParam2,
-          diagnosticMessageNode ?? expression ?? expression2);
-
-      if (expression != null ||
-          expression2 != null ||
-          diagnosticMessageNode != null) {
-        addLintMessage(
-            reporter,
-            diagnosticMessageNode ?? expression ?? expression2!,
-            msgDebugMode
-                ? errors.ErrorSeverity.ERROR
-                : errors.ErrorSeverity.INFO,
-            '''compareValueFromUltimateExpressionWithAnotherUltimateValue(), we have the following info about compared values:
-            expression = ${expression?.toSource()},
-            expression?.staticType = ${expression?.staticType}
-            expression.runtimeType = ${expression.runtimeType}
-            dartObjectParam = $dartObjectParam,
-            value = ${value},
-            dartObjectParam.variable = ${dartObjectParam?.variable}
-            expression2 = ${expression2?.toSource()},
-            expression2?.staticType = ${expression2?.staticType}
-            expression2.runtimeType = ${expression2.runtimeType}
-            dartObjectParam2 = $dartObjectParam2
-            dartObjectParam2.variable = ${dartObjectParam2?.variable}
-            value2 = ${value2}
-        ''');
-      }
-
-      if (value.valueHasBeenFound &&
-              (value2.valueHasBeenFound ||
-                  (!value2.valueHasBeenFound && (isRegExp || isBetween)))
-          // FIXME: WHILE FOR value2.isValueTakenFromLiteral producing DartObject, etc. this is reliable as i tested to some degree...
-          // BUT FOR OBJECT PRODUCED FROM LITERALS value.isValueTakenFromLiteral = false (NOT NULL!!!) it is yet to be tested and doubtfull it will work unfailingly
-          ) {
-        if ((isRegExp || isBetween) &&
-            value.value?.keys.contains(ComparableUltimateValue.simple) ==
-                true) {
-          if (isBetween) {
-            // final num t1; // left limit value
-            // final num t2; // right limit value
-            // final bool t3; // must be int-like (may be type double but integer - to enforce can't be double use f.e. @$(num $B(...) $NOT double))
-            // final bool t4; // includes left limit value
-            // final bool t5; // includes right limit value
-            num leftLimitValue =
-                dartObjectParam2!.getField('t1')!.toDoubleValue() ??
-                    dartObjectParam2.getField('t1')!.toIntValue()!;
-            num rightLimitValue =
-                dartObjectParam2.getField('t2')!.toDoubleValue() ??
-                    dartObjectParam2.getField('t2')!.toIntValue()!;
-
-            if (leftLimitValue >= rightLimitValue) {
-              return null;
-            }
-            bool mustBeInt = dartObjectParam2.getField('t3')!.toBoolValue()!;
-            bool includesLeftLimitValue =
-                dartObjectParam2.getField('t4')!.toBoolValue()!;
-            bool includesRightLimitValue =
-                dartObjectParam2.getField('t5')!.toBoolValue()!;
-            // if null, not a number, may be double type with int value:
-            num? number = value.value![ComparableUltimateValue.simple] is num
-                ? value.value![ComparableUltimateValue.simple] as num
-                : null;
-
-            if (number == null) {
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  errors.ErrorSeverity.ERROR,
-                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() error, number is null, error while checking if a simple number taken from expression is between range @\$(... \$B(1, 10, ...))');
-              return null;
-            }
-            bool isIntValue = number == number.roundToDouble() ? true : false;
-            addLintMessage(
-                reporter,
-                diagnosticMessageNode ?? expression ?? expression2!,
-                msgDebugMode
-                    ? errors.ErrorSeverity.ERROR
-                    : errors.ErrorSeverity.INFO,
-                'compareValueFromUltimateExpressionWithAnotherUltimateValue() isBetween = true, leftLimitValue = $leftLimitValue, rightLimitValue = $rightLimitValue, mustBeInt = $mustBeInt, includesLeftLimitValue = $includesLeftLimitValue, includesRightLimitValue = $includesRightLimitValue, isIntValue = $isIntValue, mustBeInt && !isIntValue = ${mustBeInt && !isIntValue} ');
-            if (mustBeInt && !isIntValue) {
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  errors.ErrorSeverity.ERROR,
-                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() error, \$B() settings require that number taken from expression (simple value) can be of type double but must have int value, error while checking if a simple number taken from expression is between range @\$(... \$B(1, 10, ...))');
-              return null;
-            }
-            return number > leftLimitValue && number < rightLimitValue ||
-                includesLeftLimitValue && number == leftLimitValue ||
-                includesRightLimitValue && number == rightLimitValue;
-          } else if (isRegExp) {
-            // final String t1; // source
-            // final bool t2; // multiline
-            // final bool t3; // case sensitive
-            // final bool t4; // unicode
-            // final bool t5; // isdotall
-
-            String regexString =
-                dartObjectParam2!.getField('t1')!.toStringValue()!;
-            bool isMultiline = dartObjectParam2.getField('t2')!.toBoolValue()!;
-            bool isCaseSensitive =
-                dartObjectParam2.getField('t3')!.toBoolValue()!;
-            bool isUnicode = dartObjectParam2.getField('t4')!.toBoolValue()!;
-            bool isDotAll = dartObjectParam2.getField('t5')!.toBoolValue()!;
-            String? string =
-                value.value![ComparableUltimateValue.simple] is String
-                    ? value.value![ComparableUltimateValue.simple] as String
-                    : null;
-            if (string == null) {
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  errors.ErrorSeverity.ERROR,
-                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() error, string is null, error while checking if a string taken from expression matches RegExp conditions stipulated in the @\$(... \$R()...) instance');
-            }
-            RegExp regex = RegExp(regexString,
-                multiLine: isMultiline,
-                caseSensitive: isCaseSensitive,
-                unicode: isUnicode,
-                dotAll: isDotAll);
-            return regex.hasMatch(string!);
-          }
-        } else if (value.value?.keys.contains(ComparableUltimateValue.simple) ==
-                true &&
-            value2.value?.keys.contains(ComparableUltimateValue.simple) ==
-                true) {
-          addLintMessage(
-              reporter,
-              diagnosticMessageNode ?? expression ?? expression2!,
-              msgDebugMode
-                  ? errors.ErrorSeverity.ERROR
-                  : errors.ErrorSeverity.INFO,
-              'compareValueFromUltimateExpressionWithAnotherUltimateValue() Comparing two simple values value.value is null ${value.value == null} value2.value is null ${value2.value == null} ,value.value![ComparableUltimateValue.simple] == value2.value![ComparableUltimateValue.simple] it is: ${value.value?[ComparableUltimateValue.simple] == value2.value?[ComparableUltimateValue.simple]}');
-          return value.value![ComparableUltimateValue.simple] ==
-              value2.value![ComparableUltimateValue.simple];
-        } else if (value.value?.keys
-                    .contains(ComparableUltimateValue.dartObject) ==
-                true &&
-            value2.value?.keys.contains(ComparableUltimateValue.dartObject) ==
-                true) {
-          return value.value![ComparableUltimateValue.dartObject] ==
-              value2.value![ComparableUltimateValue.dartObject];
-        } else if (value.value?.keys
-                    .contains(ComparableUltimateValue.expression) ==
-                true &&
-            value2.value?.keys.contains(ComparableUltimateValue.expression) ==
-                true) {
-          // DartObject docs: Returns a representation of the value of this variable, forcing the value to be computed if it had not previously been computed, or null if either this variable was not declared with the 'const' modifier or if the value of this variable could not be computed because of errors.
-          // !!! so computeConstantValue doesn't argument doesn't have to be const but the last assignment of the value must be computable
-
-          Expression? expressionF =
-              value.value?[ComparableUltimateValue.expression] as Expression?;
-          Expression? expressionF2 =
-              value2.value?[ComparableUltimateValue.expression] as Expression?;
-
-          if (expressionF is InstanceCreationExpression &&
-              expressionF2 is InstanceCreationExpression) {
-            // Now we could compare parameters of both and know if they are equal.
-
-            // FIXME: Read not perfectly clear desc of .isConst and expressionF.inConstantContext
-            // for now based on an assumption simply that .isConst guaratees calling const constructor anyway.
-            if ((expressionMustBeConst && !expressionF.isConst) ||
-                (expression2MustBeConst2 && !expressionF2.isConst)) {
-              // TODO: FIXME:
-              // TODO: FIXME:
-              // TODO: FIXME:
-              // JUST TO DO :) for constructor invokations add special instance $MUTABLE() (or default is mutable and add $CONST() instead) (maybe $STATE) where a constructor invokation (expression or variable) or variable doesn't have to be const internally but one (min and max at the same time) known assignment is required as it already is. Which means a constructor expression declared with the same constructor params that can be changed or not internally.
-              // then no const is required and is ignored
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() expressionMustBeConst == ${expressionMustBeConst} expression2MustBeConst2 == ${expression2MustBeConst2}, at least one constructor of constructor invokation is not const constructor. Some const info: expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}               
-                    expressionF.constructorName.staticElement?.isConst == ${expressionF.constructorName.staticElement?.isConst}    
-                    expressionF.constructorName.staticElement?.declaration.isConst = ${expressionF.constructorName.staticElement?.declaration.isConst}
-                    expressionF2.constructorName.staticElement?.isConst == ${expressionF2.constructorName.staticElement?.isConst}    
-                    expressionF2.constructorName.staticElement?.declaration.isConst = ${expressionF2.constructorName.staticElement?.declaration.isConst}
-                    ''');
-              return null;
-            } else if (expressionF.constructorName.name !=
-                expressionF2.constructorName.name) {
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() two compared constructor name do not mach: expressionF.constructorName.name == ${expressionF.constructorName.name}, expressionF2.constructorName.name == ${expressionF2.constructorName.name} ');
-              return null;
-            }
-
-            ConstructorElement? constructorDeclaration =
-                expressionF.constructorName.staticElement?.declaration;
-
-            bool isConstConstructor = true;
-            //if (expressionF.argumentList.arguments.length != 0) {
-            //  constructorDeclaration = expressionF.argumentList.arguments.first
-            //      .staticParameterElement?.declaration.enclosingElement;
-            //} else if (expressionF2.argumentList.arguments.length != 0) {
-            //  constructorDeclaration = expressionF2.argumentList.arguments.first
-            //      .staticParameterElement?.declaration.enclosingElement;
-            //}
-            //if (constructorDeclaration != null) {
-            //  if (constructorDeclaration is! ConstructorDeclaration) {
-            //    addLintMessage(
-            //        reporter,
-            //        diagnosticMessageNode ?? expression ?? expression2!,
-            //        msgDebugMode
-            //            ? errors.ErrorSeverity.ERROR
-            //            : errors.ErrorSeverity.INFO,
-            //        'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G4 ');
-            //    constructorDeclaration =
-            //        constructorDeclaration.enclosingElement;
-            //    if (constructorDeclaration is! ConstructorDeclaration) {
-            //      addLintMessage(
-            //          reporter,
-            //          diagnosticMessageNode ?? expression ?? expression2!,
-            //          msgDebugMode
-            //              ? errors.ErrorSeverity.ERROR
-            //              : errors.ErrorSeverity.INFO,
-            //          'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G5 ');
-            //      constructorDeclaration =
-            //          constructorDeclaration?.enclosingElement;
-            //    }
-            //    if (constructorDeclaration is ConstructorDeclaration) {
-            //      addLintMessage(
-            //          reporter,
-            //          diagnosticMessageNode ?? expression ?? expression2!,
-            //          msgDebugMode
-            //              ? errors.ErrorSeverity.ERROR
-            //              : errors.ErrorSeverity.INFO,
-            //          'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G6 ');
-            //      isConstConstructor =
-            //          (constructorDeclaration as ConstructorDeclaration)
-            //                  .constKeyword !=
-            //              null;
-            //    }
-            //  }
-            //}
-            if (!isConstConstructor) {
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  errors.ErrorSeverity.ERROR,
-                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() Error: isConstConstructor == false');
-            }
-            List<ParameterElement?>? declarationParameterElements;
-            if (constructorDeclaration is ConstructorElement) {
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G7 ');
-              declarationParameterElements =
-                  (constructorDeclaration as ConstructorElement).parameters;
-              if (declarationParameterElements == null) {
-                addLintMessage(
-                    reporter,
-                    diagnosticMessageNode ?? expression ?? expression2!,
-                    errors.ErrorSeverity.ERROR,
-                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() #G8 part InstanceCreationExpression() Error: This is unexpected for the declarationParameterElements to be null not a List<ParameterElement?>');
-                return null;
-              }
-            } else {
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  errors.ErrorSeverity.ERROR,
-                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() #G9 part InstanceCreationExpression() Error: constructorDeclaration is! ConstructorDeclaration');
-            }
-
-            // declaration
-
-            //({
-            //    List<Expression> expressions,
-            //    bool wasThereAnyEmptyReturnStatement,
-            //    bool wasThereAnyEmptyFunctionBody,
-            //  })? getUltimateConstLikeExpressions(
-            if (declarationParameterElements != null) {
-              for (int i = 0; i < declarationParameterElements.length; i++) {
-                String name = declarationParameterElements[i]!.name;
-                Expression? expressionFCorrespondingParam;
-                Expression? expressionF2CorrespondingParam2;
-                addLintMessage(
-                    reporter,
-                    diagnosticMessageNode ?? expression ?? expression2!,
-                    msgDebugMode
-                        ? errors.ErrorSeverity.ERROR
-                        : errors.ErrorSeverity.INFO,
-                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G71 declarationParameterElements[i]!.name = ${declarationParameterElements[i]!.name}, declarationParameterElements[i]!.name = ${declarationParameterElements[i]!.name}, ${declarationParameterElements[i]!.displayName}, ${declarationParameterElements[i]!.getDisplayString()}, ${declarationParameterElements[i]!.declaration.name}, ${declarationParameterElements[i]!.declaration.displayName}, expressionF.argumentList.arguments.length = ${expressionF.argumentList.arguments.length} expressionF2.argumentList.arguments.length = ${expressionF2.argumentList.arguments.length}');
-
-                for (int k = 0;
-                    k < expressionF.argumentList.arguments.length;
-                    k++) {
-                  if (name ==
-                      expressionF.argumentList.arguments[k]
-                          .staticParameterElement?.name) {
-                    //addLintMessage(
-                    //    reporter,
-                    //    diagnosticMessageNode ?? expression ?? expression2!,
-                    //    msgDebugMode
-                    //        ? errors.ErrorSeverity.ERROR
-                    //        : errors.ErrorSeverity.INFO,
-                    //    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G72 expressionF.argumentList.arguments[k].staticParameterElement?.declaration.name = ${expressionF.argumentList.arguments[k].staticParameterElement?.declaration.name} expressionF.argumentList.arguments[k].staticParameterElement?.name = ${expressionF.argumentList.arguments[k].staticParameterElement?.name} expressionF.argumentList.arguments[k].unParenthesized = ${expressionF.argumentList.arguments[k].unParenthesized}, expressionF.argumentList.arguments[k] = ${expressionF.argumentList.arguments[k]}');
-                    expressionFCorrespondingParam =
-                        expressionF.argumentList.arguments[k].unParenthesized;
-                  }
-                }
-                for (int k = 0;
-                    k < expressionF2.argumentList.arguments.length;
-                    k++) {
-                  //addLintMessage(
-                  //    reporter,
-                  //    diagnosticMessageNode ?? expression ?? expression2!,
-                  //    msgDebugMode
-                  //        ? errors.ErrorSeverity.ERROR
-                  //        : errors.ErrorSeverity.INFO,
-                  //    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() #G73 expressionF2.argumentList.arguments[k].staticParameterElement?.declaration.name = ${expressionF2.argumentList.arguments[k].staticParameterElement?.declaration.name} expressionF2.argumentList.arguments[k].staticParameterElement?.name = ${expressionF2.argumentList.arguments[k].staticParameterElement?.name} expressionF2.argumentList.arguments[k].unParenthesized = ${expressionF2.argumentList.arguments[k].unParenthesized}, expressionF2.argumentList.arguments[k] = ${expressionF2.argumentList.arguments[k]}');
-                  if (name ==
-                      expressionF2.argumentList.arguments[k]
-                          .staticParameterElement?.name) {
-                    expressionF2CorrespondingParam2 =
-                        expressionF2.argumentList.arguments[k].unParenthesized;
-                  }
-                }
-
-                if (expressionFCorrespondingParam == null &&
-                    expressionF2CorrespondingParam2 == null) {
-                  continue;
-                } else if (expressionFCorrespondingParam != null &&
-                        expressionF2CorrespondingParam2 == null ||
-                    expressionFCorrespondingParam == null &&
-                        expressionF2CorrespondingParam2 != null) {
-                  addLintMessage(
-                      reporter,
-                      diagnosticMessageNode ?? expression ?? expression2!,
-                      errors.ErrorSeverity.ERROR,
-                      'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() Error: at least one expression to be compared was null but the other not null, so the top level values are not equal. expressionFCorrespondingParam = ${expressionFCorrespondingParam}, expressionF2CorrespondingParam2 = $expressionF2CorrespondingParam2');
-                  return null;
-                }
-
-                bool? comparisonResult =
-                    compareValueFromUltimateExpressionWithAnotherUltimateValue(
-                  expression: expressionFCorrespondingParam,
-                  expressionMustBeConst: expressionMustBeConst,
-                  expression2: expressionF2CorrespondingParam2,
-                  diagnosticMessageNode:
-                      diagnosticMessageNode ?? expression ?? expression2!,
-                  expression2MustBeConst2: expression2MustBeConst2,
-                );
-
-                addLintMessage(
-                    reporter,
-                    diagnosticMessageNode ?? expression ?? expression2!,
-                    msgDebugMode
-                        ? errors.ErrorSeverity.ERROR
-                        : errors.ErrorSeverity.INFO,
-                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() comparisonResult = $comparisonResult of expressionFCorrespondingParam = $expressionFCorrespondingParam, expressionF2CorrespondingParam2 = $expressionF2CorrespondingParam2  ');
-
-                if (comparisonResult == null || comparisonResult == false) {
-                  addLintMessage(
-                      reporter,
-                      diagnosticMessageNode ?? expression ?? expression2!,
-                      errors.ErrorSeverity.ERROR,
-                      'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() Error: comparisonResult = ${comparisonResult} comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
-                  return comparisonResult;
-                }
-              }
-            }
-            addLintMessage(
-                reporter,
-                diagnosticMessageNode ?? expression ?? expression2!,
-                errors.ErrorSeverity.ERROR,
-                'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() success: return true comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}, declarationParameterElements?.length = ${declarationParameterElements?.length} declarationParameterElements = $declarationParameterElements');
-            return true;
-          } else if (expressionF is SetOrMapLiteral &&
-              expressionF2 is SetOrMapLiteral) {
-            if ((expressionMustBeConst && !expressionF.isConst) ||
-                (expression2MustBeConst2 && !expressionF2.isConst)) {
-              // TODO: FIXME:
-              // TODO: FIXME:
-              // TODO: FIXME:
-              // JUST TO DO :) for constructor invokations add special instance $MUTABLE() (or default is mutable and add $CONST() instead) (maybe $STATE) where a constructor invokation (expression or variable) or variable doesn't have to be const internally but one (min and max at the same time) known assignment is required as it already is. Which means a constructor expression declared with the same constructor params that can be changed or not internally.
-              // then no const is required and is ignored
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() expressionMustBeConst == ${expressionMustBeConst} expression2MustBeConst2 == ${expression2MustBeConst2} at least one SetOrMapLiteral expression is not const. Some const info: expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}''');
-              return null;
-            }
-
-            addLintMessage(
-                reporter,
-                diagnosticMessageNode ?? expression ?? expression2!,
-                msgDebugMode
-                    ? errors.ErrorSeverity.ERROR
-                    : errors.ErrorSeverity.INFO,
-                '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() at least one SetOrMapLiteral expression is not const. Some const info: expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}''');
-            if (expressionF.isMap != expressionF2.isMap) {
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() one of the elmeents is Map but the other is Set expressionF.isMap == ${expressionF.isMap}, expressionF2.isMap == ${expressionF2.isMap}''');
-              return null;
-            }
-            if (expressionF.elements.length != expressionF2.elements.length) {
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() the number of elements in each list is not equal so the two ListLiterals (a class representing a least) are not equal: expressionF.elements.length == ${expressionF.elements.length} expressionF2.elements.length == ${expressionF2.elements.length}''');
-              return false;
-            }
-            for (int i = 0; i < expressionF.elements.length; i++) {
-              bool? comparisonResult =
-                  compareValueFromUltimateExpressionWithAnotherUltimateValue(
-                expression: expressionF.isSet
-                    ? expressionF.elements[i] as Expression
-                    : (expressionF.elements[i] as MapLiteralEntry).value,
-                expressionMustBeConst: expressionMustBeConst,
-                expression2: expressionF2.isSet
-                    ? expressionF2.elements[i] as Expression
-                    : (expressionF2.elements[i] as MapLiteralEntry).value,
-                diagnosticMessageNode:
-                    diagnosticMessageNode ?? expression ?? expression2!,
-                expression2MustBeConst2: expression2MustBeConst2,
-              );
-
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() comparisonResult = $comparisonResult of ');
-
-              bool? comparisonResult2;
-              if (expressionF.isMap) {
-                comparisonResult2 =
-                    compareValueFromUltimateExpressionWithAnotherUltimateValue(
-                  expression: (expressionF.elements[i] as MapLiteralEntry).key,
-                  expressionMustBeConst: expressionMustBeConst,
-                  expression2:
-                      (expressionF2.elements[i] as MapLiteralEntry).key,
-                  diagnosticMessageNode:
-                      diagnosticMessageNode ?? expression ?? expression2!,
-                  expression2MustBeConst2: expression2MustBeConst2,
-                );
-
-                addLintMessage(
-                    reporter,
-                    diagnosticMessageNode ?? expression ?? expression2!,
-                    msgDebugMode
-                        ? errors.ErrorSeverity.ERROR
-                        : errors.ErrorSeverity.INFO,
-                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part InstanceCreationExpression() comparisonResult = $comparisonResult ');
-              }
-
-              if (comparisonResult == null ||
-                  comparisonResult == false ||
-                  (expressionF.isMap &&
-                      (comparisonResult2 == null ||
-                          comparisonResult2 == false))) {
-                addLintMessage(
-                    reporter,
-                    diagnosticMessageNode ?? expression ?? expression2!,
-                    errors.ErrorSeverity.ERROR,
-                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part SetOrMapLiteral() Error: comparisonResult = ${comparisonResult} comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
-                return comparisonResult;
-              }
-            }
-            addLintMessage(
-                reporter,
-                diagnosticMessageNode ?? expression ?? expression2!,
-                errors.ErrorSeverity.ERROR,
-                'compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() success: return true comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
-            return true;
-          } else if (expressionF is ListLiteral &&
-              expressionF2 is ListLiteral) {
-            if ((expressionMustBeConst && !expressionF.isConst) ||
-                (expression2MustBeConst2 && !expressionF2.isConst)) {
-              // TODO: FIXME:
-              // TODO: FIXME:
-              // TODO: FIXME:
-              // JUST TO DO :) for constructor invokations add special instance $MUTABLE() (or default is mutable and add $CONST() instead) (maybe $STATE) where a constructor invokation (expression or variable) or variable doesn't have to be const internally but one (min and max at the same time) known assignment is required as it already is. Which means a constructor expression declared with the same constructor params that can be changed or not internally.
-              // then no const is required and is ignored
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() expressionMustBeConst == ${expressionMustBeConst} expression2MustBeConst2 == ${expression2MustBeConst2} at least one ListLiteral expression is not const. Some const info: expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}''');
-              return null;
-            }
-
-            addLintMessage(
-                reporter,
-                diagnosticMessageNode ?? expression ?? expression2!,
-                msgDebugMode
-                    ? errors.ErrorSeverity.ERROR
-                    : errors.ErrorSeverity.INFO,
-                '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() Some const info: expressionMustBeConst == ${expressionMustBeConst} expression2MustBeConst2 == ${expression2MustBeConst2} expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}''');
-            if (expressionF.elements.length != expressionF2.elements.length) {
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() the number of elements in each list is not equal so the two ListLiterals (a class representing a least) are not equal: expressionF.elements.length == ${expressionF.elements.length} expressionF2.elements.length == ${expressionF2.elements.length}''');
-              return false;
-            }
-            for (int i = 0; i < expressionF.elements.length; i++) {
-              if (expressionF.elements[i] is! Expression ||
-                  expressionF2.elements[i] is! Expression) {
-                addLintMessage(
-                    reporter,
-                    diagnosticMessageNode ?? expression ?? expression2!,
-                    msgDebugMode
-                        ? errors.ErrorSeverity.ERROR
-                        : errors.ErrorSeverity.INFO,
-                    '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() at leasst one of CollectionElement instance is not an Expression instance expressionF.elements[i] is Expression == ${expressionF.elements[i] is Expression} expressionF2.elements[i] is Expression == ${expressionF2.elements[i] is Expression}''');
-                return null;
-              }
-
-              bool? comparisonResult =
-                  compareValueFromUltimateExpressionWithAnotherUltimateValue(
-                expression: expressionF.elements[i] as Expression,
-                expressionMustBeConst: expressionMustBeConst,
-                expression2: expressionF2.elements[i] as Expression,
-                diagnosticMessageNode:
-                    diagnosticMessageNode ?? expression ?? expression2!,
-                expression2MustBeConst2: expression2MustBeConst2,
-              );
-
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() comparisonResult = $comparisonResult');
-
-              if (comparisonResult == null || comparisonResult == false) {
-                addLintMessage(
-                    reporter,
-                    diagnosticMessageNode ?? expression ?? expression2!,
-                    errors.ErrorSeverity.ERROR,
-                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() Error: comparisonResult = ${comparisonResult} comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
-                return comparisonResult;
-              }
-            }
-            addLintMessage(
-                reporter,
-                diagnosticMessageNode ?? expression ?? expression2!,
-                errors.ErrorSeverity.ERROR,
-                'compareValueFromUltimateExpressionWithAnotherUltimateValue() part ListLiteral() success: return true comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
-            return true;
-          } else if (expressionF is RecordLiteral &&
-              expressionF2 is RecordLiteral) {
-            // 1. RecordType (not literal Expreesion) has namedFields and Positional fields so you need to compare type of each in the == "Type" part
-            // not difficult to implement.
-            // 2. But here RecordLiteral has fields - list of expressions like list or set
-            // Supposedly for enum you don't need to do anything as i can see there is no something special for enum (there is but seems not immediately needed but useful elsewhere)
-            // then you will use InstanceCreationExpression and just type comparison enum abc {...} use abc in $(abc, abc.cde) .cde means constructor call InstanceCreationExpression
-
-            if ((expressionMustBeConst && !expressionF.isConst) ||
-                (expression2MustBeConst2 && !expressionF2.isConst)) {
-              // TODO: FIXME:
-              // TODO: FIXME:
-              // TODO: FIXME:
-              // JUST TO DO :) for constructor invokations add special instance $MUTABLE() (or default is mutable and add $CONST() instead) (maybe $STATE) where a constructor invokation (expression or variable) or variable doesn't have to be const internally but one (min and max at the same time) known assignment is required as it already is. Which means a constructor expression declared with the same constructor params that can be changed or not internally.
-              // then no const is required and is ignored
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() expressionMustBeConst == ${expressionMustBeConst} expression2MustBeConst2 == ${expression2MustBeConst2} at least one RecordLiteral expression is not const. Some const info: expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}''');
-              return null;
-            }
-
-            addLintMessage(
-                reporter,
-                diagnosticMessageNode ?? expression ?? expression2!,
-                msgDebugMode
-                    ? errors.ErrorSeverity.ERROR
-                    : errors.ErrorSeverity.INFO,
-                '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() at least one RecordLiteral expression is not const. Some const info: expressionF.isConst = ${expressionF.isConst} expressionF2.isConst = ${expressionF2.isConst} expressionF.inConstantContext == ${expressionF.inConstantContext} expressionF.inConstantContext == ${expressionF2.inConstantContext}''');
-            if (expressionF.fields.length != expressionF2.fields.length) {
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() the number of elements in each list is not equal so the two ListLiterals (a class representing a least) are not equal: expressionF.elements.length == ${expressionF.fields.length} expressionF2.elements.length == ${expressionF2.fields.length}''');
-              return false;
-            }
-            for (int i = 0; i < expressionF.fields.length; i++) {
-              if (expressionF.fields[i] is! Expression ||
-                  expressionF2.fields[i] is! Expression) {
-                addLintMessage(
-                    reporter,
-                    diagnosticMessageNode ?? expression ?? expression2!,
-                    msgDebugMode
-                        ? errors.ErrorSeverity.ERROR
-                        : errors.ErrorSeverity.INFO,
-                    '''compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() at leasst one of CollectionElement instance is not an Expression instance expressionF.elements[i] is Expression == ${expressionF.fields[i] is Expression} expressionF2.elements[i] is Expression == ${expressionF2.fields[i] is Expression}''');
-                return null;
-              }
-
-              bool? comparisonResult =
-                  compareValueFromUltimateExpressionWithAnotherUltimateValue(
-                expression: expressionF.fields[i],
-                expressionMustBeConst: expressionMustBeConst,
-                expression2: expressionF2.fields[i],
-                diagnosticMessageNode:
-                    diagnosticMessageNode ?? expression ?? expression2!,
-                expression2MustBeConst2: expression2MustBeConst2,
-              );
-
-              addLintMessage(
-                  reporter,
-                  diagnosticMessageNode ?? expression ?? expression2!,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  'compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() comparisonResult = $comparisonResult of ');
-
-              if (comparisonResult == null || comparisonResult == false) {
-                addLintMessage(
-                    reporter,
-                    diagnosticMessageNode ?? expression ?? expression2!,
-                    errors.ErrorSeverity.ERROR,
-                    'compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() Error: comparisonResult = ${comparisonResult} comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
-                return comparisonResult;
-              }
-            }
-            addLintMessage(
-                reporter,
-                diagnosticMessageNode ?? expression ?? expression2!,
-                errors.ErrorSeverity.ERROR,
-                'compareValueFromUltimateExpressionWithAnotherUltimateValue() part RecordLiteral() success: return true comparisonResult == null||comparisonResult==false Two expression compared: expression = ${expression}, expression2 = ${expression2}');
-            return true;
-          }
-        }
-
-        if (expression != null ||
-            expression2 != null ||
-            diagnosticMessageNode != null) {
-          addLintMessage(
-              reporter,
-              diagnosticMessageNode ?? expression ?? expression2!,
-              msgDebugMode
-                  ? errors.ErrorSeverity.ERROR
-                  : errors.ErrorSeverity.INFO,
-              'compareValueFromUltimateExpressionWithAnotherUltimateValue() are values compared equal?: value == value2: ${value == value2}');
-        }
-        return null;
-        return value == value2;
-      } else {
-        if (expression != null ||
-            expression2 != null ||
-            diagnosticMessageNode != null) {
-          addLintMessage(
-              reporter,
-              diagnosticMessageNode ?? expression ?? expression2!,
-              msgDebugMode
-                  ? errors.ErrorSeverity.ERROR
-                  : errors.ErrorSeverity.INFO,
-              'compareValueFromUltimateExpressionWithAnotherUltimateValue() the two values compared are of instances that can\' be compared. The two values related record with all info look like this: value: $value, value2: $value2');
-        }
-        return null;
-      }
-    }
-
-    checkingReturnTypesAndValues(
-        MethodDeclaration methodDeclaration,
-        List<Expression> expressions,
-        Expando<Identifier>? topLevelIdentifiersProducingExpressions) {
-      addLintMessage(
-          reporter,
-          methodDeclaration,
-          msgDebugMode ? errors.ErrorSeverity.ERROR : errors.ErrorSeverity.INFO,
-          'checkingReturnTypesAndValues: Entered stage #0 expressions.length = ${expressions.length} expressions = ${expressions}');
-      for (int k = 0; k < expressions.length; k++) {
-        final Expression expression = expressions[k];
-        Expression messageNode = expression;
-        addLintMessage(
-            reporter,
-            methodDeclaration,
-            msgDebugMode
-                ? errors.ErrorSeverity.ERROR
-                : errors.ErrorSeverity.INFO,
-            'checkingReturnTypesAndValues: Entered stage #1');
-        addLintMessage(
-            reporter,
-            expression,
-            msgDebugMode
-                ? errors.ErrorSeverity.ERROR
-                : errors.ErrorSeverity.INFO,
-            'checkingReturnTypesAndValues: Entered stage #2');
-        try {
-          // the below line will throw if there is no element at all (so the last one too isn't);
-          methodDeclaration.declaredElement?.metadata.last;
-        } catch (e) {
-          return;
-        }
-        try {
-          if (methodDeclaration.declaredElement == null) {
-            continue;
-          }
-          final List<ElementAnnotation>? metad =
-              methodDeclaration.declaredElement!.metadata;
-
-          addLintMessage(
-              reporter,
-              methodDeclaration,
-              msgDebugMode
-                  ? errors.ErrorSeverity.ERROR
-                  : errors.ErrorSeverity.INFO,
-              'checkingReturnTypesAndValues: Entered stage #3');
-          addLintMessage(
-              reporter,
-              expression,
-              msgDebugMode
-                  ? errors.ErrorSeverity.ERROR
-                  : errors.ErrorSeverity.INFO,
-              'checkingReturnTypesAndValues: Entered stage #3');
-          if (metad != null &&
-              metad.isNotEmpty &&
-              metad.last.element?.displayName == "\$") {
-            /// You never expect this to be null
-            //NodeList<Expression>? metaAnnotationObjectArguments =
-            //    $AnnotationsByElementId[metad.last.element?.id]
-            //        ?.arguments
-            //        ?.arguments;
-            //if (metaAnnotationObjectArguments == null) {
-            //  //addLintMessage(
-            //  //    reporter,
-            //  //    expression,
-            //  //    msgDebugMode
-            //  //        ? errors.ErrorSeverity.ERROR
-            //  //        : errors.ErrorSeverity.INFO,
-            //  //    'checkingReturnTypesAndValues: Entered stage #4.5 metaAnnotationObjectArguments can\'t be null');
-            //}
-
-            bool hasBeenExceptionForTheCurrentNode = false;
-
-            DartObject? computedMetaObject = metad.last.computeConstantValue();
-            if (computedMetaObject == null) continue;
-            bool hasConditionSwitchedTo$NOT = false;
-            bool hasConditionSwitchedTo$Nullable = false;
-            bool hasConditionSwitchedTo$Mutable = false;
-            bool theParamMatchesAtLeastOneTypeOrValueRequirements = false;
-            bool
-                thereWasAtLeastOneConditionElementBefore$NOTOr$IFOrEndOfTheCondition =
-                false;
-            bool
-                theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition =
-                false;
-            bool? is$ = computedMetaObject.getField('is\$')?.toBoolValue();
-            if (is$ != null && is$) {
-              addLintMessage(
-                  reporter,
-                  expression,
-                  msgDebugMode
-                      ? errors.ErrorSeverity.ERROR
-                      : errors.ErrorSeverity.INFO,
-                  'checkingReturnTypesAndValues: Entered stage #5');
-              TypeSystem typeSystem =
-                  methodDeclaration.declaredElement!.library.typeSystem;
-
-              for (int i = 1; i <= standardNumberOfFields; i++) {
-                DartObject? currentField = computedMetaObject.getField('t$i');
-                Expression? currentFieldExpression;
-                if (!currentField!.isNull) {
-                  // if would be null a param would has been passed to the constructor so the argument wouln't be available.
-                  // even if null was passed the expression would be created, if so it wouldn't be used so ok anyway
-                  currentFieldExpression = methodDeclaration
-                      .metadata[methodDeclaration.metadata.length - 1]
-                      .arguments
-                      ?.arguments[i - 1];
-                }
-                if (currentField.isNull) {
-                  break;
-                } else if (currentField.type.toString() != "Type") {
-                  theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition =
-                      true;
-
-                  /// $M(any qualifying expression, not Identifier only) not type but value/instance/literal, etc.
-                  bool isMutableValue =
-                      false; // const is not required, f.e. a List eee = ['abc'] on declaration or (not and) first-and-the-only assignment is required but you can eee.add();
-                  /// not type but value/instance/literal, etc.
-                  /// $N(someIdentifier) also the final expression must be of Identifier with declared f.e. not int type but int?
-                  bool isNullableValue = false;
-                  bool isBetween = false;
-                  bool isRegExp = false;
-
-                  addLintMessage(
-                      reporter,
-                      expression,
-                      msgDebugMode
-                          ? errors.ErrorSeverity.ERROR
-                          : errors.ErrorSeverity.INFO,
-                      'checkingReturnTypesAndValues: Entered stage #5.3, just before the while loop: currentFieldExpression == $currentFieldExpression, currentFieldExpression is InstanceCreationExpression == ${currentFieldExpression is InstanceCreationExpression}, currentFieldExpression.runtimeType == ${currentFieldExpression.runtimeType}, currentField?.type == ${currentField?.type} currentField?.type?.getDisplayString() == ${currentField?.type?.getDisplayString()} ');
-
-                  /// TODO: KEEP IT/LOGIC COMPATIBLE WITH getExpressionWithCustomComparisonRequirements
-                  /// related to isMutableValue and isNullableValue and possibly more in the future
-                  /// the only reason for this loop is that there may be an instance $N, $M and possibly more in the future
-                  /// and the $M $N instances are carriers of the real type or value
-                  /// $M(any qualifying expression, not Identifier only) not type but value/instance/literal, etc.
-                  /// $N(someIdentifier) also the final expression must be of Identifier with declared f.e. not int type but int?
-                  /// when $M or $N like instance the variables like isMutable isNullable defined above this loop get their values
-                  /// and because nesting is allowed for $N($M(someDeclaredVariable)) the continue mutableNullable: may repeat up to several times
-                  /// untile the real compared currentField and currentFieldExpression expression is reached.
-                  /// if no continue mutableNullable; is called at the end break mutableNullable; forcing the loop not to iterate twice
-                  while (true) {
-                    if (currentField == null ||
-                        currentField!.isNull ||
-                        currentField!.type.toString() == "Type") {
-                      addLintMessage(
-                          reporter,
-                          methodDeclaration,
-                          errors.ErrorSeverity.ERROR,
-                          'checkingReturnTypesAndValues() Error: at this stage only instance objects are allowed no Types, null values carried by currentField or a currentField that is null not DartObject.');
-                      break;
-                    } else {
-                      setUpNewFields() {
-                        currentField = currentField!.getField('t1');
-                        if (currentField != null) {
-                          currentFieldExpression = (currentFieldExpression
-                                  as InstanceCreationExpression)
-                              .argumentList
-                              .arguments
-                              .first;
-                        } else {
-                          currentFieldExpression = null;
-                        }
-                      }
-
-                      addLintMessage(
-                          reporter,
-                          expression,
-                          msgDebugMode
-                              ? errors.ErrorSeverity.ERROR
-                              : errors.ErrorSeverity.INFO,
-                          'checkingReturnTypesAndValues: Entered stage #5.5, currentFieldExpression == $currentFieldExpression, currentFieldExpression is InstanceCreationExpression == ${currentFieldExpression is InstanceCreationExpression}, currentFieldExpression.runtimeType == ${currentFieldExpression.runtimeType}, currentField?.type == ${currentField?.type} currentField?.type?.getDisplayString() == ${currentField?.type?.getDisplayString()} ');
-
-                      switch (currentField?.type?.getDisplayString()) {
-                        case "\$M":
-                          isMutableValue = true;
-                          setUpNewFields();
-                          continue;
-                        case "\$N":
-                          isNullableValue = true;
-                          setUpNewFields();
-                          continue;
-                        case "\$B":
-                          isBetween = true;
-                          break;
-                        case "\$R":
-                          isRegExp = true;
-                          break;
-                      }
-                    }
-                    break;
-                  }
-                  if (isNullableValue || hasConditionSwitchedTo$Nullable) {
-                    Identifier? theTopLevelAncestorIdentifier =
-                        topLevelIdentifiersProducingExpressions?[expression];
-                    if (theTopLevelAncestorIdentifier == null) {
-                      addLintMessage(
-                          reporter,
-                          methodDeclaration,
-                          errors.ErrorSeverity.ERROR,
-                          'checkingReturnTypesAndValues() Error: theTopLevelAncestorIdentifier = ${theTopLevelAncestorIdentifier} Current expression == $expression, expression is expected to belong to an Indentifier instance but the indentifier was not found as the \$N(somerequiredexpressionOrIdentifierHavingExpression) need to work with identifiers and the identifier instance (int? abc = 10 - abc is Identifier() instance) with declared type that is nullable f.e. int? not int, List? not List. And in this particlular case (\$N(...)). But the expression inside \$N() will be matched with the current expression not with the ancestor Identifier');
-                    } else {
-                      addLintMessage(
-                          reporter,
-                          methodDeclaration,
-                          msgDebugMode
-                              ? errors.ErrorSeverity.ERROR
-                              : errors.ErrorSeverity.INFO,
-                          'checkingReturnTypesAndValues: theTopLevelAncestorIdentifier = ${theTopLevelAncestorIdentifier} isNullableValue == true but is the identifier defined as nullable type?: theTopLevelAncestorIdentifier.staticType?.nullabilitySuffix == NullabilitySuffix.question == ${theTopLevelAncestorIdentifier.staticType?.nullabilitySuffix == NullabilitySuffix.question} hence Some data: currentFieldExpression is! Identifier == ${currentFieldExpression is! Identifier} ${currentFieldExpression is! Identifier ? currentFieldExpression?.staticType : (currentFieldExpression as Identifier).staticType?.nullabilitySuffix} == ${currentFieldExpression is! Identifier ? currentFieldExpression?.staticType : (currentFieldExpression as Identifier).staticType?.nullabilitySuffix} currentFieldExpression.staticType == ${currentFieldExpression?.staticType}');
-                      // FIXME: i expect this to contain info about nullabilitySuffix
-                      // if not you have to go to the declaration variable and get info about the type - left hand or writeElement dont remember now
-                      if (theTopLevelAncestorIdentifier
-                              .staticType?.nullabilitySuffix !=
-                          NullabilitySuffix.question) {
-                        addLintMessage(
-                            reporter,
-                            methodDeclaration,
-                            errors.ErrorSeverity.ERROR,
-                            'checkingReturnTypesAndValues() Error: Current expression which was to be mached against the \$N(somerequiredexpressionAlsoMayBeIdentifier) has it\'s own closest ancestor Identifier() instance but the ancestor identifier was not defined with a nullable type (int? abc = 10 - abc is Identifier() instance) with declared type that is nullable f.e. int? not int, List? not List. WARNING! Read doc // info above the place this message was defined, info on how to get the nullability info in different way if this was incorrect');
-                      }
-                    }
-                  }
-
-                  // TODO: we can try to get expression instead of DartObject to be able compare constructors, list, maps and sets not only DartObjects or simple type values like 2.8, "abc"
-                  // ((inv.argumentList.arguments.first.staticParameterElement?.metadata.first.element?.declaration as ClassMember) as FieldDeclaration).fields.variables.first.initializer;
-                  bool wasUsedComparisonResult2 = false;
-                  bool? comparisonResult;
-                  bool? comparisonResult2;
-                  try {
-                    //addLintMessage(
-                    //    reporter,
-                    //    methodDeclaration,
-                    //    msgDebugMode
-                    //        ? errors.ErrorSeverity.ERROR
-                    //        : errors.ErrorSeverity.INFO,
-                    //    'checkingReturnTypesAndValues: the expression represents value. methodDeclaration.metadata.length = ${methodDeclaration.metadata.length}');
-                    //addLintMessage(
-                    //    reporter,
-                    //    messageNode,
-                    //    msgDebugMode
-                    //        ? errors.ErrorSeverity.ERROR
-                    //        : errors.ErrorSeverity.INFO,
-                    //    'checkingReturnTypesAndValues: the expression represents value. ');
-                    comparisonResult =
-                        compareValueFromUltimateExpressionWithAnotherUltimateValue(
-                            expression: expression,
-                            expressionMustBeConst: !(isMutableValue ||
-                                hasConditionSwitchedTo$Mutable),
-                            dartObjectParam2: currentField,
-                            expression2MustBeConst2:
-                                false, // currentField doesn't have to be const but on first and only value assignment calculable/readable final values must repeat for constructor, list/map/set/record literals,,
-                            isBetween: isBetween,
-                            isRegExp: isRegExp);
-
-                    if (!isBetween &&
-                            !isRegExp &&
-                            comparisonResult == null &&
-                            currentFieldExpression != null
-                        //&& methodDeclaration.metadata.length > 0 &&
-                        //methodDeclaration
-                        //    .metadata[methodDeclaration.metadata.length - 1]
-                        //    .arguments
-                        //    ?.arguments
-                        //    .length is int &&
-                        //methodDeclaration
-                        //        .metadata[methodDeclaration.metadata.length - 1]
-                        //        .arguments!
-                        //        .arguments
-                        //        .length >=
-                        //    i - 1 &&
-                        //methodDeclaration
-                        //        .metadata[methodDeclaration.metadata.length - 1]
-                        //        .arguments
-                        //        ?.arguments[i - 1] !=
-                        //    null
-                        ) {
-                      wasUsedComparisonResult2 = true;
-                      addLintMessage(
-                          reporter,
-                          methodDeclaration,
-                          msgDebugMode
-                              ? errors.ErrorSeverity.ERROR
-                              : errors.ErrorSeverity.INFO,
-                          'checkingReturnTypesAndValues: comparing with comparisonResult2 : expression: ${methodDeclaration.metadata[methodDeclaration.metadata.length - 1].arguments?.arguments[i - 1]}');
-                      addLintMessage(
-                          reporter,
-                          messageNode,
-                          msgDebugMode
-                              ? errors.ErrorSeverity.ERROR
-                              : errors.ErrorSeverity.INFO,
-                          'checkingReturnTypesAndValues: comparing with comparisonResult2 : expression: ${methodDeclaration.metadata[methodDeclaration.metadata.length - 1].arguments?.arguments[i - 1]}');
-
-                      comparisonResult2 =
-                          compareValueFromUltimateExpressionWithAnotherUltimateValue(
-                              expression: expression,
-                              expressionMustBeConst: !(isMutableValue ||
-                                  hasConditionSwitchedTo$Mutable),
-                              expression2:
-                                  currentFieldExpression // to remind you in the previous method call getField was used but it failed so we use this corresponding expression
-                              ,
-                              expression2MustBeConst2:
-                                  false, // expression corresponding to getField doesn't have to be const but on first and only value assignment calculable/readable final values must repeat for constructor, list/map/set/record literals,
-                              //isBetween: isBetween,
-                              //isRegExp: isRegExp
-                              diagnosticMessageNode: methodDeclaration);
-                    }
-                  } catch (e, stackTrace) {
-                    addLintMessage(
-                        reporter,
-                        methodDeclaration,
-                        msgDebugMode
-                            ? errors.ErrorSeverity.ERROR
-                            : errors.ErrorSeverity.INFO,
-                        'checkingReturnTypesAndValues() catched error: i==$i (meta = i but Annotation argument has index i-1) e = $e, stackTrace $stackTrace');
-                    addLintMessage(
-                        reporter,
-                        messageNode,
-                        msgDebugMode
-                            ? errors.ErrorSeverity.ERROR
-                            : errors.ErrorSeverity.INFO,
-                        'checkingReturnTypesAndValues() catched error: i==$i (meta = i but Annotation argument has index i-1) e = $e, stackTrace $stackTrace');
-                    //'checkingReturnTypesAndValues() catched error: metaAnnotationObjectArguments= ${metaAnnotationObjectArguments}, e = $e, stackTrace $stackTrace');
-                    rethrow;
-                  }
-
-                  addLintMessage(
-                      reporter,
-                      methodDeclaration,
-                      msgDebugMode
-                          ? errors.ErrorSeverity.ERROR
-                          : errors.ErrorSeverity.INFO,
-                      'checkingReturnTypesAndValues() INFO WHAT WE HAVE` expressions compared: $expression, $currentField. comparisonResult = ${comparisonResult}, comparisonResult2 = ${comparisonResult2}, wasUsedComparisonResult2 = $wasUsedComparisonResult2, isBetween: $isBetween, isRegExp: $isRegExp');
-                  addLintMessage(
-                      reporter,
-                      messageNode,
-                      msgDebugMode
-                          ? errors.ErrorSeverity.ERROR
-                          : errors.ErrorSeverity.INFO,
-                      'checkingReturnTypesAndValues() INFO WHAT WE HAVE` expressions compared: $expression, $currentField. comparisonResult = ${comparisonResult}, comparisonResult2 = ${comparisonResult2}, wasUsedComparisonResult2 = $wasUsedComparisonResult2, isBetween: $isBetween, isRegExp: $isRegExp');
-
-                  if (comparisonResult == null && comparisonResult2 == null) {
-                    return;
-                  }
-
-                  // FIXME: When using the code from danno_script_lints_discovery_lab.dart (or danno_script_lints_discovery_lab.dart?) somewhere else take into account that
-                  // "syntax" instances $IF() $THEN() don't allow for thereWasAtLeastOneConditionElementBefore$NOTOr$IFOrEndOfTheCondition = true;
-                  // which is reserved for normal values - literals, variables
-                  // but there maybe $BETWEEN(5, 10) IMPLEMENTED IN THE FUTURE it won't be "syntax" instance
-                  if (!hasConditionSwitchedTo$NOT) {
-                    thereWasAtLeastOneConditionElementBefore$NOTOr$IFOrEndOfTheCondition =
-                        true;
-                  }
-                  if (comparisonResult == true) {
-                    addLintMessage(
-                        reporter,
-                        messageNode,
-                        msgDebugMode
-                            ? errors.ErrorSeverity.ERROR
-                            : errors.ErrorSeverity.INFO,
-                        'checkingReturnTypesAndValues() comparisonResult the expression is not type so it should be a value to be compared like 0.345 or an instance of some class SomeClass()');
-                    if (hasConditionSwitchedTo$NOT) {
-                      addLintMessage(
-                          reporter,
-                          messageNode,
-                          msgDebugMode
-                              ? errors.ErrorSeverity.ERROR
-                              : errors.ErrorSeverity.INFO,
-                          'checkingReturnTypesAndValues() comparisonResult the expression matches value (not type) at least one \$() NOT CONDITION (after \$NOT)');
-                      theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition =
-                          true;
-                    } else {
-                      addLintMessage(
-                          reporter,
-                          messageNode,
-                          msgDebugMode
-                              ? errors.ErrorSeverity.ERROR
-                              : errors.ErrorSeverity.INFO,
-                          'checkingReturnTypesAndValues() comparisonResult the expression matches value (not type) at least one \$() NORMAL (not after \$NOT) CONDITION');
-                      theParamMatchesAtLeastOneTypeOrValueRequirements = true;
-                    }
-                  } else if (comparisonResult2 == true) {
-                    addLintMessage(
-                        reporter,
-                        messageNode,
-                        msgDebugMode
-                            ? errors.ErrorSeverity.ERROR
-                            : errors.ErrorSeverity.INFO,
-                        'checkingReturnTypesAndValues() comparisonResult2 the expression is not type so it should be a value to be compared like 0.345 or an instance of some class SomeClass()');
-                    if (hasConditionSwitchedTo$NOT) {
-                      addLintMessage(
-                          reporter,
-                          messageNode,
-                          msgDebugMode
-                              ? errors.ErrorSeverity.ERROR
-                              : errors.ErrorSeverity.INFO,
-                          'checkingReturnTypesAndValues() comparisonResult2 the expression matches value (not type) at least one \$() NOT CONDITION (after \$NOT)');
-                      theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition =
-                          true;
-                    } else {
-                      addLintMessage(
-                          reporter,
-                          messageNode,
-                          msgDebugMode
-                              ? errors.ErrorSeverity.ERROR
-                              : errors.ErrorSeverity.INFO,
-                          'checkingReturnTypesAndValues() the expression matches value (not type) at least one \$() NORMAL (not after \$NOT) CONDITION');
-                      theParamMatchesAtLeastOneTypeOrValueRequirements = true;
-                    }
-                  } else {
-                    addLintMessage(
-                        reporter,
-                        messageNode,
-                        errors.ErrorSeverity.ERROR,
-                        'checkingReturnTypesAndValues() comparisonResult = ${comparisonResult}, comparisonResult2 = ${comparisonResult2}, wasUsedComparisonResult2 = $wasUsedComparisonResult2, comparisonResult == null||comparisonResult==false which means for null the result was not comparable because of Expression types not handled yet (not implemented, or "impossible" to handle), or expressions are of different types, or if == false two expressions/objects were compared successfuly but not equal. Old (maybe not up to date) error info: Sort of Syntax Error due to the difficulty with implementing all features, to avoid this problem use only variable names (maybe required to be const (verify)) instead of direct values like [10, 20], but you can use 10, 2.5, \'abc\' not \'abc\$name wer\'. Also try to check out if some other types like the mentioned [10, 20] - handling them havent\'t been in the incoming versions, implemented At least one value hasn\'t been found or both values were found but one of them was received from Instance() object but te second from a DartObject?, while for a values like int it is not a problem, but for List or SomeClass() instance at the time of writig this message the two objects are represented by two different class instances. It is practical to temporary set up theParamMatchesAtLeastOneTypeOrValueRequirementsOf\$NOTPartOfTheCondition = true; how to fixit? expression causing problem: $expression, $currentField.');
-
-                    /// ??? was: theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition = true;
-                  }
-                } else {
-                  // .valueHasBeenFound == null changes the meaning of potential null of value.value below:
-                  // isTheValueOfExpressionNull is null when not set up at all becaue the first if statement (hasExpressionTypeNullabilitySuffix)
-                  // Why it is not a problem when the value was not found value.value value is not calculable,
-                  // only for value.value == null it is always calculable;
-                  // we know that because HERE we work on ultimate non-conditional final expressions where there is a type known:
-                  // such an non-ultimate expression looks like this:
-                  // int? abc = 20 + unknownNonConstantValue;
-                  // abc ?? cde == null? null:2.5;
-                  // the ultimate expressions we work here is abc, null and 2.5
-                  // getting the null will never fail.
-                  // 2.5 we know it is double but we don't need it's computed value.
-                  // abc is uncalculable but we know it is int as 20 + anything is always int
-                  // also unknownNonConstantValue + 20 is not null but as the declared type of abc is int? we know it must be int because you if unknownNonConstantValue == null then you can't add null + 20
-                  // FIXME:
-                  // [Last edit:] The final decision must be:
-                  // the each ultimate expression (List<[ultimate]Expression)) from a variable must be taken.
-                  // Types: Both for const and and variable. Because the declared num? might be be null, int, double but $($NOT double) says it all,
-                  // Values: it doesn't matter
-                  // [Edit:] not sufficient sleep: the below is not a problem as all variables have calculated value
-                  // because of that you know if the value is null value or something else
-                  // if something else it is calculated and get the underlying type
-                  // but while it is true you can't get it's underlying type? to be compared here? guite a puzzle.
-                  // FIXME: FIXME: PROBABLY FOUND THE BEST WAY TO SOLVE THE PROBLEM:
-                  // LITERALS USE FOR F.E. LIST AND MAP also CollectionElement IT TURNS OUT Expression is implementing CollectionElement
-                  // and while collection element might be ForElement and more only non expression element classes
-                  // but literal probably it is only [Expression].
-                  // SO IS there a CHANCE TO COMPARE IT WITH Itendtifier() BECAUSE
-                  // Identifier() has .elements here each has [CollectionElement] and each rather "must" have Expression.
-                  // But as i see two the same looking expressions might produce different values if a const [const1, const2] or variable with the same name produces different values
-                  // !!! No? Possibly if you have NodeList<CollectionElement> for Identifier and ListLiteral
-                  // !!! No? you might try to compare it with eqal ==
-                  // what of instance of SomeClass()?
-                  // we have InstanceCreationExpression(): f.e. expression.unParenthesized;
-                  // then we have Itentifier which has elements CollectionElements (assuming is also Expression)
-                  // it might be one element (can be more?)
-                  // BUT WE CANNOT COMPUTE IT AS WITH LIST AND MAP AND SET WE CAN'T
-                  // SO PROBABLY IT'S A MESS.
-                  // THE ONLY WAY IT COULD BE DONE IS
-                  // WHEN ALL COLLECTION ELEMENTS ARE CALCULATE LIKE [10, 2.8, 'some stRING', $constValueMaybeAAAAAAAAAAAAAAAAaa, SomeOtherClass()] (MAYBE LATER "STRING $a"),
-                  // possibly also constructors with params like SomeClass(10, 2.8, 'some stRING', $constValueMaybe) (MAYBE LATER "STRING $a"),
-                  // SomeClass(10, 2.8, 'some stRING', constValueMaybeAAAAAAAAAAAAAAAAaa, SomeOtherClass())
-                  // SomeClass(10, 2.8, 'some stRING', constValueMaybeBBBBBBBBBBBBBBBBBBB, SomeOtherClass())
-                  // constValueMaybeAAAAAAAAAAAAAAAAaa....computeConstantValue()! == $constValueMaybeBBBBBBBBBBBBBBBBBBB....computeConstantValue()!
-                  // probably no need to check .isNull but make sure it returns for DartObject the same for isDartCoreInt for example like for non-typically-handled values.
-                  // HOW COULD IT BE DONE FOR EACH COLLECTION ELEMENT:
-                  // getUltimateNonConditionalNorSwitchExpressions GETS YOU EXPRESSIONS IN A UNIQUE ORDER
-                  // SO BOTH COMARABLE each collectoin element expression must be equal if it is SomceClass(...) then the params are like collection elements so the list of returned expressions from the constructor must be comparable with other object - in the right order.
-                  // SO WE KINDA VERY CLOSE TO SOLVE THE PROBLEM.
-                  // IT COULD BE SO BECAUSE such constructed instances procuce always the same object (our value) exactly of the same class (class name must agree - dont know if cast as is a problem.).
-                  // Also instances don't have to be created like const SomeClass - it is important that the constructor declaration is preceded with const.
-                  // ======================
-                  // I just noticed then that you may or may not have to calculate the the non-null type of unknownNonConstantValue;
-                  // of course not simple int? but maybe Object? but it is String or List or SomeClass
-                  // we haven't broke it down, did we?
-                  // this is the only spot where we have to ignore declared type like Object?
-                  // and get the final type of expression itself to get closer types
-                  //
-                  // REVISE IT AGAIN
-                  // FIXME: END.
-                  // so analyzer does it for you but this is breaking down the logic
-                  // So the final expression is not null so the following correct:
-
-                  String typeValueString =
-                      currentField!.toTypeValue()!.getDisplayString();
-                  // null when not set up:
-                  bool? isTheValueOfExpressionNull;
-
-                  if (typeValueString == "Null") {
-                    // we have to check if it is just null, and fortunatelly you can calculate it whether it is Itentifier or BooleanLiteral (Literal)
-                    var value = getComparableValueFromExpressionOrDartObject(
-                        reporter,
-                        returnStatements,
-                        assignmentExpressionsByElementId,
-                        variableDeclarationsByElementId,
-                        expression);
-                    if (value.valueHasBeenFound && value.value == null) {
-                      isTheValueOfExpressionNull = true;
-                    } else {
-                      isTheValueOfExpressionNull == false;
-                    }
-                  }
-
-                  //typeSystem.promoteToNonNull();
-                  addLintMessage(
-                      reporter,
-                      messageNode,
-                      errors.ErrorSeverity.INFO,
-                      'checkingReturnTypesAndValues meta param value is Type. isTheValueOfExpressionNull = $isTheValueOfExpressionNull, typeSystem.isSubtypeOf(expression.staticType!, currentField.toTypeValue()!) = ${typeSystem.isSubtypeOf(expression.staticType!, currentField!.toTypeValue()!)} , expression.staticType = ${expression.staticType}, currentField.toTypeValue() = ${currentField!.toTypeValue()}');
-                  if (expression.staticType == null) {
-                    addLintMessage(
-                        reporter,
-                        messageNode,
-                        errors.ErrorSeverity.ERROR,
-                        'checkingReturnTypesAndValues Error: it is unexpected that expression.staticType == null');
-                    continue;
-                  }
-                  if (typeValueString == '\$NOT') {
-                    hasConditionSwitchedTo$NOT = true;
-                    hasConditionSwitchedTo$Nullable = false;
-                    hasConditionSwitchedTo$Mutable = false;
-                  } else if (typeValueString == '\$N') {
-                    hasConditionSwitchedTo$Nullable = true;
-                  } else if (typeValueString == '\$M') {
-                    hasConditionSwitchedTo$Mutable = true;
-                  } else if ((typeValueString == "Null" &&
-                          isTheValueOfExpressionNull == true) ||
-                      typeSystem.isSubtypeOf(expression.staticType!,
-                          currentField!.toTypeValue()!)) {
-                    if (hasConditionSwitchedTo$NOT) {
-                      theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition =
-                          true;
-                      addLintMessage(
-                          reporter,
-                          messageNode,
-                          errors.ErrorSeverity.INFO,
-                          'info: after \$NOT matches: expression = ${expression}, currentField.type = ${currentField!.type}');
-                    } else {
-                      addLintMessage(
-                          reporter,
-                          messageNode,
-                          errors.ErrorSeverity.INFO,
-                          'info: before \$NOT matches: expression = ${expression}, currentField.type = ${currentField!.type}');
-                      theParamMatchesAtLeastOneTypeOrValueRequirements = true;
-                    }
-                  } else {
-                    if (!hasConditionSwitchedTo$NOT) {
-                      thereWasAtLeastOneConditionElementBefore$NOTOr$IFOrEndOfTheCondition =
-                          true;
-                    }
-                  }
-                }
-              }
-
-              if (theParamMatchesAtLeastOneTypeOrValueRequirementsOf$NOTPartOfTheCondition ||
-                  (!theParamMatchesAtLeastOneTypeOrValueRequirements &&
-                      thereWasAtLeastOneConditionElementBefore$NOTOr$IFOrEndOfTheCondition)) {
-                addLintMessage(
-                    reporter,
-                    messageNode,
-                    errors.ErrorSeverity.ERROR,
-                    'Error: A return statement expression/value is not of required type nor value, if expression is complex with possible multiple ulitmate possible value returns i means that at least one of the sub values is not meeting the expectations of a returned value: expression = ${expression.toSource()}');
-              }
-            }
-          }
-        } catch (e, stackTrace) {
-          addLintMessage(
-              reporter,
-              methodDeclaration,
-              errors.ErrorSeverity.ERROR,
-              'Lint plugin exception: $e $stackTrace');
         }
       }
     }
@@ -2658,8 +3670,21 @@ class DannoScriptLintsDiscoveryLab extends DartLintRule {
           addLintMessage(reporter, declaration, errors.ErrorSeverity.WARNING,
               'handlingFunctionLikeDeclaration: calling checkingReturnTypesAndValues WARNING WARNING - PROBABLY FunctionDeclaration could be used as param for the method, but now focusing on MethodDeclaration. At the same time FunctionExpression is not allowed here expressions.length=${expressions.length}');
           try {
-            checkingReturnTypesAndValues(declaration, expressions,
+            bool? callingResult = checkingReturnTypesAndValues(
+                reporter,
+                returnStatements,
+                assignmentExpressionsByElementId,
+                variableDeclarationsByElementId,
+                declaration,
+                expressions,
                 topLevelIdentifiersProducingExpressions);
+            addLintMessage(
+                reporter,
+                declaration,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
+                'handlingFunctionLikeDeclaration: info: The first top level checkingReturnTypesAndValues call with the following result bool?: $callingResult');
           } catch (e, stackTrace) {
             addLintMessage(reporter, declaration, errors.ErrorSeverity.ERROR,
                 'handlingFunctionLikeDeclaration: error: e = $e, stackTrace = $stackTrace');
@@ -2783,14 +3808,18 @@ class DannoScriptLintsDiscoveryLab extends DartLintRule {
             addLintMessage(
                 reporter,
                 returnStatement,
-                errors.ErrorSeverity.ERROR,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
                 '.addReturnStatement parentNode is MethodDeclaration, id = $id');
           } else if (parentNode.parent is FunctionExpression) {
             id = (parentNode.parent as FunctionExpression).declaredElement?.id;
             addLintMessage(
                 reporter,
                 returnStatement,
-                errors.ErrorSeverity.ERROR,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
                 '.addReturnStatement parentNode is FunctionExpression, id = $id');
           } else if (parentNode.parent is FunctionDeclaration) {
             id = (parentNode.parent as FunctionDeclaration)
@@ -2800,7 +3829,9 @@ class DannoScriptLintsDiscoveryLab extends DartLintRule {
             addLintMessage(
                 reporter,
                 returnStatement,
-                errors.ErrorSeverity.ERROR,
+                msgDebugMode
+                    ? errors.ErrorSeverity.ERROR
+                    : errors.ErrorSeverity.INFO,
                 '.addReturnStatement parentNode is FunctionDeclaration, id = $id');
           }
           if (id == null) {
