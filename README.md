@@ -16,7 +16,8 @@ What's the point you can require a return value (later variable declaration, ass
     1,
     const [6, 8] 
   ]
-}```
+}
+```
 and you can write f.e. a extension type/ macro, etc for Set/List/Value that converts it to json string.
 for example (read comments) (a full printscreen showing lint errors, involving different cases later in code under the specs probably):
 ```dart
@@ -49,7 +50,6 @@ for example (read comments) (a full printscreen showing lint errors, involving d
         }      
       }
 ```
-
 
 TODO: 
 1. Some explanation how it works, but it can be understood from analisis the following code and image with lint results. 
